@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Redefinição de Senha - SVP Brasil</title>
+  <link rel="stylesheet" href="redefinirsenha.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="login-section">
+      <div class="logo">
+        <img src="images/logo_lvsp2.png" alt="Logo SVP Brasil" /> <br>
+      </div>
+      <h2>Redefinição de Senha</h2>
+      <form action="redefinir_senha.php" method="POST">
+        <div class="input-group">
+          <label for="senha">Senha <span style="color:red">*</span></label>
+          <input
+            type="password"
+            id="senha"
+            name="senha"
+            placeholder="Insira sua nova senha"
+            required
+          />
+          <div class="senha-requisitos" style="display:none;">
+            <span class="requisito" id="req-length"
+              ><span class="icon">✘</span> A senha deve conter pelo menos 8 caracteres</span>
+            <span class="requisito" id="req-uppercase"
+              ><span class="icon">✘</span> A senha deve conter pelo menos uma letra maiúscula</span>
+            <span class="requisito" id="req-number"
+              ><span class="icon">✘</span> A senha deve conter pelo menos um número</span>
+          </div>
+        </div>
+        <div class="input-group">
+          <label for="confirmar_senha">Confirmar Senha <span style="color:red">*</span></label>
+          <input
+            type="password"
+            id="confirmar_senha"
+            name="confirmar_senha"
+            placeholder="Confirme sua nova senha"
+            required
+          />
+          <small class="msg-error" style="display:none;">As senhas não coincidem</small>
+        </div>
+
+        <button type="submit">Alterar Senha</button>
+      </form>
+    </div>
+
+    <div class="image-section">
+      <img src="images/fundo_lvsp.png" alt="Imagem de suporte à saúde" />
+    </div>
+  </div>
+
+  <script src="redefinirsenha.js"></script>
+</body>
+</html>

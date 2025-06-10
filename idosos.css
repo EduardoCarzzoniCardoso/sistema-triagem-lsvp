@@ -1,0 +1,175 @@
+.tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.tab-button {
+    padding: 10px 20px;
+    border: 1px solid var(--border-color);
+    border-bottom: none;
+    background-color: var(--card-bg);
+    cursor: pointer;
+    font-size: var(--font-size-medium);
+    font-weight: 500;
+    color: var(--text-color);
+    transition: background-color 0.3s ease;
+}
+
+.tab-button:first-child {
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 0;
+    border-right: none;
+}
+
+.tab-button:last-child {
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 0;
+    border-left: none;
+}
+
+.tab-button.active-tab {
+    background-color: var(--primary-blue);
+    color: white;
+    border-color: var(--primary-blue);
+    border-bottom: 1px solid var(--primary-blue);
+    position: relative;
+    z-index: 1;
+}
+
+.filter-section {
+    background-color: var(--header-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.filter-section h3 {
+    margin-top: 0;
+    color: var(--text-color);
+    font-size: 1.3em;
+    margin-bottom: 15px;
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    align-items: end;
+}
+
+.filter-grid .filter-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+}
+
+.filter-grid label {
+    width: auto;
+    margin-bottom: 5px;
+}
+
+.filter-grid input[type="text"],
+.filter-grid input[type="date"],
+.filter-grid select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 1em;
+    box-sizing: border-box;
+}
+
+.filter-grid .filter-button {
+    width: 100%;
+    padding: 10px 15px;
+    font-size: 1em;
+    margin-top: 10px;
+}
+
+.data-table-container {
+    overflow-x: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    white-space: nowrap;
+}
+
+.data-table th, .data-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-color);
+    font-size: var(--font-size-medium);
+}
+
+.data-table th {
+    background-color: var(--primary-blue);
+    color: white;
+    font-weight: 500;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.data-table tbody tr:nth-child(even) {
+    background-color: var(--card-bg);
+}
+
+.data-table tbody tr:hover {
+    background-color: #f0f0f0;
+}
+
+.no-results {
+    text-align: center;
+    padding: 20px;
+    color: var(--light-text);
+    font-size: 1.1em;
+}
+
+.table-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.table-actions a {
+    padding: 6px 12px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 0.9em;
+    color: white;
+    transition: opacity 0.3s ease;
+}
+
+.table-actions a:hover {
+    opacity: 0.8;
+}
+
+.btn-relatorio {
+    background-color: #28a745;
+}
+
+.btn-contrato {
+    background-color: #ffc107;
+    color: #343a40;
+}
+
+@media (max-width: 768px) {
+    .filter-grid {
+        grid-template-columns: 1fr;
+    }
+    .data-table-container {
+        border-radius: 0;
+    }
+    .data-table th, .data-table td {
+        padding: 10px;
+        font-size: var(--font-size-small);
+    }
+}
