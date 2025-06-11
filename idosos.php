@@ -148,7 +148,7 @@ function formatDate($date) {
                 <li><a href="paginainicial.php">Início</a></li>
                 <li><a href="triagens.php">Triagens</a></li>
                 <li><a href="idosos.php" class="active">Idosos</a></li>
-                <li><a href="usuario.php">Usuário</a></li>
+                <li><a href="usuarios.php">Usuários</a></li>
             </ul>
         </nav>
 

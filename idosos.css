@@ -134,13 +134,15 @@ body.page-idosos .main-content {
     margin: 0 auto;
     max-height: 400px; 
     overflow-y: auto; 
+    overflow-x: auto;
     padding-right: 5px; 
 }
 
 .data-table {
     width: 100%;
     border-collapse: separate;
-    border-spacing: 0 10px;
+    border-spacing: 10px 10px;
+    table-layout: fixed;
 }
 
 .data-table th, .data-table td {
@@ -161,9 +163,16 @@ body.page-idosos .main-content {
 }
 
 .data-table tbody td {
-    background-color: #fff;
-    border: 1px solid #e5e7eb;
+   background-color: #fff;
+   border: 1px solid #dee2e6;
 }
+
+.data-table .col-nome { width: 30%; }
+.data-table .col-cpf { width: 20%; }
+.data-table .col-nascimento { width: 15%; }
+.data-table .col-status { width: 15%; }
+.data-table .col-data { width: 20%; }
+.data-table .col-actions { width: 25%; }
 
 .no-results {
     text-align: center;

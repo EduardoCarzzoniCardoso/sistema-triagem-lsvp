@@ -189,7 +189,7 @@ $contadores['usuarios_ativos'] = $stmt_usuarios_ativos->fetchColumn();
                 <li><a href="paginainicial.php" class="active">Início</a></li>
                 <li><a href="triagens.php">Triagens</a></li>
                 <li><a href="idosos.php">Idosos</a></li>
-                <li><a href="usuario.php">Usuário</a></li>
+                <li><a href="usuarios.php">Usuários</a></li>
             </ul>
         </nav>
 
