@@ -7,7 +7,8 @@ $msgClass = '';
 $codigo_acesso = '';
 $nome_completo = '';
 
-unset($_SESSION['id_usuario_para_redefinir']);
+unset($_SESSION['id_usuario_para_alterar_senha_recuperacao']);
+unset($_SESSION['id_usuario_para_redefinir']); 
 unset($_SESSION['nome_para_redefinir']);
 unset($_SESSION['cargo_para_redefinir']);
 unset($_SESSION['codigo_para_redefinir']);
@@ -20,24 +21,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($codigo_acesso !== '' && $nome_completo !== '') {
         try {
             $pdo = conexaodb();
-            $stmt = $pdo->prepare("SELECT id_usuario FROM usuarios WHERE codigo_acesso = :codigo AND nome_usuario = :nome AND status_usuario = 'Ativo' AND senha_temporaria = 0 LIMIT 1");
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+            $stmt = $pdo->prepare("SELECT id_usuario FROM usuarios WHERE codigo_acesso = :codigo AND nome_usuario = :nome AND status_usuario = 'Ativo' LIMIT 1");
             $stmt->execute([':codigo' => $codigo_acesso, ':nome' => $nome_completo]);
             
-            $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+            $usuario_encontrado = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($usuario) {
-                $_SESSION['id_usuario_recuperar'] = $usuario['id_usuario'];
-                $_SESSION['codigo_para_redefinir'] = $codigo_acesso;
+            if ($usuario_encontrado) {
+                $id_usuario = $usuario_encontrado['id_usuario'];
 
-                header("Location: redefinirsenha.php");
+                $_SESSION['id_usuario_para_alterar_senha_recuperacao'] = $id_usuario; 
+                
+                header("Location: alterarsenha.php");
                 exit();
+
             } else {
-                $msg = 'Código de acesso ou nome inválidos ou conta não ativada.';
-                $msgClass = 'erro';
+                $msg = 'Código de acesso ou nome inválidos ou conta não encontrada.';
+                $msgClass = 'erro'; 
             }
         } catch (PDOException $e) {
             $msg = "Erro de conexão com o banco de dados. Por favor, tente novamente.";
             $msgClass = 'erro';
+            error_log("Erro em recuperarsenha.php: " . $e->getMessage());
         }
     } else {
         $msg = 'Por favor, preencha todos os campos.';

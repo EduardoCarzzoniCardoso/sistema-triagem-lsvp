@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gerar_credenciais']))
                  VALUES (:nome, :codigo, :senha, :cargo, 'Inativo', 1, NOW(), NULL)"
             );
             
-            $nome_placeholder = null; 
+            $nome_placeholder = ""; 
 
             $stmt->execute([
                 ':nome' => $nome_placeholder,
