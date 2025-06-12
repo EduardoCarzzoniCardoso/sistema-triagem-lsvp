@@ -92,7 +92,7 @@ $cargo_filtro = $_GET['cargo'] ?? '';
 $where_clauses = [];
 $params = [];
 
-$query_base = "SELECT codigo_acesso, nome_usuario, cargo, status_usuario, ultimo_acesso FROM usuarios";
+$query_base = "SELECT id_usuario, codigo_acesso, nome_usuario, cargo, status_usuario, ultimo_acesso FROM usuarios";
 
 if (!empty($buscar_filtro)) {
     $where_clauses[] = "(nome_usuario LIKE :buscar OR codigo_acesso LIKE :buscar)";
@@ -252,6 +252,7 @@ function formatarData($data) {
                             <th class="col-cargo">Cargo</th>
                             <th class="col-status">Status</th>
                             <th class="col-acesso">Último Acesso</th>
+                            <th class="col-actions">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -263,11 +264,15 @@ function formatarData($data) {
                                     <td class="col-cargo"><?= htmlspecialchars($usuario['cargo']) ?></td>
                                     <td class="col-status"><?= htmlspecialchars($usuario['status_usuario']) ?></td>
                                     <td class="col-acesso"><?= htmlspecialchars(formatarData($usuario['ultimo_acesso'])) ?></td>
+                                    <td class="col-actions">
+                                        <a href="editar_usuario.php?id=<?= htmlspecialchars($usuario['id_usuario']) ?>" class="btn-action btn-edit">Editar</a>
+                                        <a href="deletar_usuario.php?id=<?= htmlspecialchars($usuario['id_usuario']) ?>" class="btn-action btn-delete" onclick="return confirm('Tem certeza que deseja deletar este usuário?');">Deletar</a>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="5" class="no-results">Nenhum usuário encontrado.</td>
+                                <td colspan="6" class="no-results">Nenhum usuário encontrado.</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ficha de Triagem - Continuação - Sistema de Triagem LSVP</title>
+  <link rel="stylesheet" href="paginainicial.css">
+  <link rel="stylesheet" href="nova_triagem.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="page-triagens">
+  <div class="container">
+    <header class="header-top">
+      <div class="logo-area">
+        <img src="images/logo_lvsp2.png" alt="Logo SVP Brasil">
+        <span class="username-display"><?php echo htmlspecialchars($nome_usuario_logado); ?></span>
+      </div>
+      <div class="logout-area">
+        <i class="fas fa-bell"></i>
+        <button class="logout-button" onclick="window.location.href='<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>?logout=true'">Logout</button>
+      </div>
+    </header>
+    <nav class="main-nav">
+      <ul>
+        <li><a href="#">Início</a></li>
+        <li><a href="#" class="active">Triagens</a></li>
+        <li><a href="#">Idosos</a></li>
+        <li><a href="#">Usuário</a></li>
+      </ul>
+    </nav>
+
+  <main class="main-content">
+    <h1>Triagens</h1>
+    <div class="triagem-layout">
+<!-- Menu lateral -->
+        <aside class="triagem-sidebar">
+          <button class="sidebar-button">Ficha de Triagem - Início</button>
+          <button class="sidebar-button active">Ficha de Triagem - Continuação</button>
+          <button class="sidebar-button">Ficha de Triagem - Contrato</button>
+          <button class="sidebar-button">Parecer do(a) Coordenador(a)</button>
+          <button class="sidebar-button">Parecer da Diretoria</button>
+          <button class="sidebar-button">Parecer do Médico</button>
+          <button class="sidebar-button">Parecer Psicológico</button>
+          <button class="sidebar-button">Finalização da Triagem</button>
+        </aside>
+
+        <!-- Formulário principal -->
+        <section class="triagem-form-content">
+          <h2>Ficha de Triagem - Continuação</h2>
+          <form class="form-grid">
+            
+            <fieldset>
+                <legend>Filiação</legend>
+              <input type="text" placeholder="Nome do pai..." name="nome_pai" />
+              <input type="text" placeholder="Nome da mãe..." name="nome_mae" />
+              <input type="text" placeholder="Local de nascimento..." name="local_nascimento" />
+              <input type="text" placeholder="Data de nascimento..." name="data_nascimento" />
+            </fieldset>
+            <fieldset>
+              <input type="text" placeholder="Estado civil..." name="estado_civil" />
+              <input type="text" placeholder="Nacionalidade..." name="nacionalidade" />
+              <input type="text" placeholder="Profissão..." name="profissao" />
+              <input type="text" placeholder="Sexo..." name="sexo" />
+              <input type="text" placeholder="Religião..." name="religiao" />
+            </fieldset>
+
+            <h2>Filhos, parentes ou pessoas conhecidas</h2>
+            <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Endereço</th>
+                                    <th>Cidade</th>
+                                    <th>Telefone</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (!empty($idosos)): ?>
+                                    <?php foreach ($idosos as $idoso): ?>
+                                        <tr>
+                                            <!--Alterar conforme o figma-->
+                                            <td><?= htmlspecialchars($idoso['nome_idoso']) ?></td>
+                                            <td><?= htmlspecialchars(formatCpf($idoso['cpf_idoso'])) ?></td>
+                                            <td><?= htmlspecialchars(formatDate($idoso['data_nascimento'])) ?></td>
+                                            <td><?= htmlspecialchars($idoso['etapa']) ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                    <?php else: ?>
+                                    <tr>
+                                      <td colspan="5" style="text-align: center;">Nenhum registro encontrado.</td>
+                                    </tr>
+                                  <?php endif; ?>
+                            </tbody>
+                        </table>
+                </div>
+                <legend>Comentários</legend>
+                <textarea placeholder="Escreva aqui..." name="comentarios"></textarea>
+            <div class="form-buttons">
+                <button href="nova_triagem.html" type="submit" class="btn-primary">Voltar</button>
+                <button type="submit" class="btn-primary">Salvar</button>
+                <button type="button" class="btn-secondary">Alterar</button>
+                <button type="submit" class="btn-primary">Finalizar</button>
+                <button type="submit" class="btn-primary">Avançar</button>
+            </div>
+          </form>
+        </section>
+    </div>
+  </main>
+
+  <footer class="footer-bottom">
+            Sistema de Triagem LSVP - Lar São Vicente de Paulo | © 2025 - Versão 1.0
+    </footer>
+</body>
+</html>
