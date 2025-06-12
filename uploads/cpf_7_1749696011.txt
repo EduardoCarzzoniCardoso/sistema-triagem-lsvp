@@ -1,0 +1,213 @@
+-- Remove o banco de dados se ele já existir, para garantir um começo limpo.
+DROP DATABASE IF EXISTS projeto_lsvp_DB;
+
+-- Cria o novo banco de dados.
+CREATE DATABASE projeto_lsvp_DB;
+
+-- Seleciona o banco de dados para usar.
+USE projeto_lsvp_DB;
+
+-- Estrutura da tabela: usuarios
+CREATE TABLE usuarios (
+    id_usuario INT AUTO_INCREMENT PRIMARY KEY,
+    codigo_acesso VARCHAR(20) UNIQUE,
+    senha VARCHAR(255),
+    senha_temporaria BOOLEAN,
+    nome_usuario VARCHAR(100),
+    status_usuario ENUM('Ativo', 'Inativo') NOT NULL DEFAULT 'Inativo',
+    data_de_cadastro_usuario DATETIME,
+    cargo ENUM('Diretoria', 'Coordenador', 'Enfermeiro', 'Psicologo', 'Assistente social') NOT NULL,
+    ultimo_acesso DATETIME,
+    data_ultima_modificacao_perfil_usuario DATETIME
+);
+
+-- Estrutura da tabela: ficha_idosos
+CREATE TABLE ficha_idosos (
+    id_idoso INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    nome_idoso VARCHAR(100),
+    endereco_idoso VARCHAR(100),
+    numero_idoso VARCHAR(10),
+    bairro_idoso VARCHAR(50),
+    cidade_idoso VARCHAR(50),
+    cep_idoso VARCHAR(10),
+    estado_idoso VARCHAR(2),
+    rg_idoso VARCHAR(20),
+    cpf_idoso VARCHAR(14),
+    titulo_eleitor VARCHAR(20),
+    carteira_profissional VARCHAR(20),
+    reservista VARCHAR(20),
+    certidao_nascimento VARCHAR(20),
+    certidao_casamento VARCHAR(20),
+    outros_documentos_idoso TEXT,
+    pai_nome VARCHAR(100),
+    mae_nome VARCHAR(100),
+    local_nascimento VARCHAR(100),
+    data_nascimento DATE,
+    estado_civil_idoso VARCHAR(20),
+    nacionalidade_idoso VARCHAR(50),
+    profissao VARCHAR(50),
+    sexo ENUM('Masculino', 'Feminino'),
+    religiao VARCHAR(50),
+    comentarios TEXT,
+    data_finalizacao_ficha DATETIME,
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
+);
+
+-- Estrutura da tabela: triagens
+CREATE TABLE triagens (
+    id_triagem INT AUTO_INCREMENT PRIMARY KEY,
+    id_idoso INT,
+    status ENUM('Em andamento', 'Concluida', 'Cancelada') NOT NULL,
+    etapa_atual VARCHAR(100),
+    data_finalizacao_geral_triagem DATETIME,
+    data_de_inicio_cadastro_idoso DATETIME DEFAULT CURRENT_TIMESTAMP,
+    id_usuario_iniciou_triagem INT NOT NULL,
+    id_usuario_finalizou_triagem INT,
+    FOREIGN KEY (id_idoso) REFERENCES ficha_idosos(id_idoso),
+    FOREIGN KEY (id_usuario_iniciou_triagem) REFERENCES usuarios(id_usuario),
+    FOREIGN KEY (id_usuario_finalizou_triagem) REFERENCES usuarios(id_usuario)
+);
+
+-- Estrutura da tabela: finalizacao_triagem
+CREATE TABLE finalizacao_triagem (
+    id_finalizacao_triagem INT AUTO_INCREMENT PRIMARY KEY,
+    id_triagem INT NOT NULL,
+    id_usuario INT NOT NULL,
+    certidao_nasc_ou_casamento BOOLEAN DEFAULT FALSE,
+    anexo_certidao_nasc_ou_casamento TEXT,
+    rg BOOLEAN DEFAULT FALSE,
+    anexo_rg TEXT,
+    cpf BOOLEAN DEFAULT FALSE,
+    anexo_cpf TEXT,
+    receituarios BOOLEAN DEFAULT FALSE,
+    anexo_receituarios TEXT,
+    medicamentos BOOLEAN DEFAULT FALSE,
+    anexo_medicamentos TEXT,
+    roupas_uso_pessoal BOOLEAN DEFAULT FALSE,
+    duas_fotos_3x4 BOOLEAN DEFAULT FALSE,
+    anexo_duas_fotos_3x4 TEXT,
+    caminho_contrato_gerado TEXT,
+    caminho_relatorio_gerado TEXT,
+    FOREIGN KEY (id_triagem) REFERENCES triagens(id_triagem),
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
+);
+
+-- Estrutura da tabela: parecer_coordenador_diretoria
+CREATE TABLE parecer_coordenador_diretoria (
+    id_parecer_coordenador_diretoria INT AUTO_INCREMENT PRIMARY KEY,
+    id_triagem INT NOT NULL,
+    tipo ENUM('Coordenador', 'Diretoria') NOT NULL,
+    ordem ENUM('Primeiro', 'Segundo') NOT NULL,
+    id_usuario INT NOT NULL,
+    responsavel_nome VARCHAR(100) NOT NULL,
+    data_finalizacao_parecer_coord_dir DATETIME,
+    observacao TEXT,
+    status ENUM('Aprovado', 'Rejeitado', 'Lista de Espera'),
+    FOREIGN KEY (id_triagem) REFERENCES triagens(id_triagem),
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
+);
+
+-- Estrutura da tabela: parecer_medico
+CREATE TABLE parecer_medico (
+    id_parecer_medico INT AUTO_INCREMENT PRIMARY KEY,
+    id_triagem INT NOT NULL,
+    id_usuario INT NOT NULL,
+    data_finalizacao_parecer_medico DATETIME,
+    comentario TEXT,
+    parecer_final_medico ENUM('Aprovado', 'Rejeitado'),
+    FOREIGN KEY (id_triagem) REFERENCES triagens(id_triagem),
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
+);
+
+-- Estrutura da tabela: parecer_psicologico
+CREATE TABLE parecer_psicologico (
+    id_parecer_psicologico INT AUTO_INCREMENT PRIMARY KEY,
+    id_triagem INT NOT NULL,
+    id_usuario INT NOT NULL,
+    data_finalizacao_parecer_psicologico DATETIME,
+    conteudo_texto TEXT,
+    parecer_final_psicologico ENUM('Aprovado', 'Rejeitado'),
+    FOREIGN KEY (id_triagem) REFERENCES triagens(id_triagem),
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
+);
+
+-- Estrutura da tabela: parentes_ou_conhecidos
+CREATE TABLE parentes_ou_conhecidos (
+    id_idoso INT NOT NULL,
+    id_parente_conhecido INT AUTO_INCREMENT PRIMARY KEY,
+    nome_parente_conhecido VARCHAR(100),
+    endereco_parente_conhecido VARCHAR(255),
+    cidade_parente_conhecido VARCHAR(50),
+    telefone_parente_conhecido VARCHAR(15),
+    FOREIGN KEY (id_idoso) REFERENCES ficha_idosos(id_idoso)
+);
+
+-- Estrutura da tabela: dados_complementares_contrato
+CREATE TABLE dados_complementares_contrato (
+    id_idoso INT NOT NULL,
+    id_dados_contrato INT AUTO_INCREMENT PRIMARY KEY,
+    situacao_ocupacional VARCHAR(50),
+    telefone_idoso VARCHAR(15),
+    nome_responsavel_solidario VARCHAR(100),
+    grau_de_parentesco VARCHAR(50),
+    logradouro_responsavel_solidario VARCHAR(100),
+    numero_responsavel_solidario VARCHAR(10),
+    bairro_responsavel_solidario VARCHAR(50),
+    cidade_responsavel_solidario VARCHAR(50),
+    cep_responsavel_solidario VARCHAR(10),
+    estado_responsavel_solidario VARCHAR(2),
+    telefone_responsavel_solidario VARCHAR(15),
+    cpf_responsavel_solidario VARCHAR(14),
+    estado_civil_responsavel_solidario VARCHAR(20),
+    rg_responsavel_solidario VARCHAR(20),
+    nacionalidade_responsavel_solidario VARCHAR(50),
+    nome_assistente_social_contrato VARCHAR(100),
+    nome_coordenador_administrativo_contrato VARCHAR(100),
+    data_finalizacao_dados_contrato DATETIME,
+    FOREIGN KEY (id_idoso) REFERENCES ficha_idosos(id_idoso)
+);
+
+-- Estrutura da tabela: checkbox_medico
+CREATE TABLE checkbox_medico (
+    id_checkbox INT AUTO_INCREMENT PRIMARY KEY,
+    id_parecer_medico INT NOT NULL,
+    descricao VARCHAR(255),
+    marcado BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (id_parecer_medico) REFERENCES parecer_medico(id_parecer_medico)
+);
+
+-- Estrutura da tabela: backup
+CREATE TABLE backup (
+    id_backup INT AUTO_INCREMENT PRIMARY KEY,
+    data_backup DATETIME DEFAULT CURRENT_TIMESTAMP,
+    tipo_backup ENUM('Manual', 'Automatico') NOT NULL DEFAULT 'Automatico',
+    local_armazenamento TEXT,
+    status ENUM('Sucesso', 'Falha') NOT NULL,
+    observacoes TEXT
+);
+
+-- Estrutura da tabela: notificacoes
+CREATE TABLE notificacoes (
+    id_notificacao INT AUTO_INCREMENT PRIMARY KEY,
+    mensagem TEXT,
+    data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
+    visivel_para ENUM('Diretoria', 'Coordenador', 'Enfermeiro', 'Psicologo', 'Assistente social'),
+    expira_em DATETIME,
+    foi_lida BOOLEAN DEFAULT FALSE,
+    data_lida DATETIME
+);
+
+-- ===================================================================
+-- INSERÇÃO DE DADOS DE TESTE - USUÁRIOS NÃO ATIVADOS
+-- ===================================================================
+-- Estes usuários são criados no estado 'Inativo' e com senha temporária,
+-- prontos para serem ativados através da tela de cadastro.php.
+
+INSERT INTO `usuarios` (`codigo_acesso`, `senha`, `senha_temporaria`, `nome_usuario`, `status_usuario`, `data_de_cadastro_usuario`, `cargo`, `ultimo_acesso`, `data_ultima_modificacao_perfil_usuario`) VALUES
+('CODDIR01', 'Mudar123', 1, NULL, 'Inativo', NOW(), 'Diretoria', NULL, NULL),
+('CODCOO01', 'Senha456', 1, NULL, 'Inativo', NOW(), 'Coordenador', NULL, NULL),
+('CODENF01', 'Temp789', 1, NULL, 'Inativo', NOW(), 'Enfermeiro', NULL, NULL),
+('CODPSI01', 'Ativar10', 1, NULL, 'Inativo', NOW(), 'Psicologo', NULL, NULL),
+('CODASS01', 'Valido11', 1, NULL, 'Inativo', NOW(), 'Assistente social', NULL, NULL);
+

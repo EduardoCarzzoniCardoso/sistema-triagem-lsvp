@@ -59,9 +59,9 @@ body.page-triagens .main-content {
     min-width: 150px;
 }
 
-.filter-grid label { /* Esta regra não é usada no HTML atual, mas mantida caso haja referência */
+.filter-group label {
     font-weight: 500;
-    color: var(--text-color);
+    color: #343a40;
     white-space: nowrap;
     margin-bottom: 0;
 }
@@ -112,12 +112,11 @@ body.page-triagens .main-content {
     justify-content: center;
     align-items: center;
     white-space: nowrap;
-
     padding: 12px 20px;
     font-size: 1em;
     height: 46px;
-    box-sizing: border-box; /* Adicionado para garantir que padding/borda sejam incluídos na altura */
-    line-height: 1; /* Adicionado para padronizar a altura da linha do texto */
+    box-sizing: border-box;
+    line-height: 1;
 }
 
 .filter-button:hover,
@@ -127,11 +126,11 @@ body.page-triagens .main-content {
 
 .filter-button {
     min-width: 180px;
-    width: 200px; /* Largura FIXA para o botão "Filtrar" */
+    width: 200px;
 }
 .start-new-triage-button {
-     min-width: 180px;
-     width: 200px; /* Largura FIXA para o botão "+ Começar Nova Triagem" */
+    min-width: 180px;
+    width: 200px;
 }
 
 .table-wrapper {
@@ -153,8 +152,8 @@ body.page-triagens .main-content {
 .data-table th, .data-table td {
     text-align: center;
     padding: 12px 15px;
-    border-radius: 8px;
     vertical-align: middle;
+    border-radius: 8px;
 }
 
 .data-table thead th {
@@ -172,40 +171,30 @@ body.page-triagens .main-content {
    border: 1px solid #dee2e6;
 }
 
-.data-table .col-nome { width: 30%; }
-.data-table .col-cpf { width: 20%; }
-.data-table .col-nascimento { width: 15%; }
-.data-table .col-status { width: 15%; }
-.data-table .col-data { width: 20%; }
-.data-table .col-actions { width: 25%; }
-
 .no-results {
     text-align: center;
     padding: 20px;
-    color: var(--text-color);
+    color: #6c757d;
     font-size: 1.1em;
     background-color: #f8f9fa;
     border: 1px dashed #ccc;
-}
-
-.td-actions {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
 }
 
 .btn-action {
     background-color: #007bff;
     color: white !important;
     text-decoration: none;
-    padding: 6px 14px;
+    padding: 8px 16px;
     border-radius: 6px;
     border: none;
-    font-size: 0.85em;
+    width: 80px;
+    font-size: 0.9em;
+    font-weight: 500;
     cursor: pointer;
     transition: background-color 0.2s ease;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .btn-action:hover {
@@ -217,29 +206,26 @@ body.page-triagens .main-content {
     cursor: not-allowed;
     opacity: 0.7;
 }
-
-@media (max-width: 992px) {
-    .filter-section form {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .filter-inputs-wrapper {
-        width: 100%;
-        justify-content: space-between;
-    }
-    .filter-section form button.filter-button {
-        width: 100%;
-        margin-top: 10px;
-    }
+.btn-action-delete {
+    background-color: #dc3545;
+    color: white !important;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    font-size: 0.9em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
-
-@media (max-width: 768px) {
-    .filter-section {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .start-new-triage-button {
-        width: 100%;
-        margin-top: 15px;
-    }
+.btn-action-delete:hover {
+    background-color: #c82333;
+}
+.actions-cell {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
 }
