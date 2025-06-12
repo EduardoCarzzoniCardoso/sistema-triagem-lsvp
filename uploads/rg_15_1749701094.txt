@@ -1,0 +1,207 @@
+NOME DOS INTEGRANTES DO GRUPO:
+Klausner Kyoshi Nakaniwa Warizaya
+Henrique Carvalho Sakoda Telles
+Pedro Henrique Nascimento Duarte
+Eduardo Carzzoni Cardoso
+
+Inserir os dados do usuário no primeiro acesso e verificar se as credenciais estão corretas 
+SELECT * FROM usuarios WHERE codigo_acesso = :codigo_acesso AND senha = :senha AND senha_temporaria = TRUE; 
+UPDATE usuarios 
+SET  
+    nome_usuario = :nome_usuario, 
+    data_de_cadastro_usuario = :data_de_cadastro_usuario, 
+    cargo = :cargo, 
+    senha_temporaria = FALSE 
+WHERE codigo_acesso = :codigo_acesso; 
+
+ 
+Login do usuário 
+SELECT senha, senha_temporaria FROM usuarios  
+
+WHERE codigo_acesso = :codigo_acesso AND status_usuario = 'Ativo';
+
+
+Redefinição de senha
+SELECT senha FROM usuarios 
+
+WHERE codigo_acesso = :codigo_acesso AND nome_usuario = :nome_usuario; 
+ 
+UPDATE usuarios 
+SET senha = :nova_senha, 
+    data_ultima_modificacao_perfil_usuario = NOW() 
+WHERE codigo_acesso = :codigo_acesso; 
+
+
+Recuperação de senha:
+SELECT id_usuario FROM usuarios
+WHERE codigo_acesso = :codigo_acesso AND nome_usuario = :nome_usuario AND status_usuario = 'Ativo';
+
+Verificação do código de acesso
+SELECT id_usuario FROM usuarios
+WHERE codigo_acesso = :codigo_acesso
+  AND nome_usuario = :nome_usuario
+  AND cargo = :cargo
+  AND status_usuario = 'Ativo';
+
+
+Informações que serão mostradas na tabela da tela "Início", conforme o filtro do usuário
+SELECT
+    (SELECT COUNT(*) FROM triagens 
+     WHERE status = 'Concluida' 
+       AND data_finalizacao_geral_triagem BETWEEN :data_inicio AND :data_fim) AS total_idosos_acolhidos,
+
+    (SELECT COUNT(*) FROM triagens 
+     WHERE status = 'Em andamento' 
+       AND data_de_inicio_cadastro_idoso BETWEEN :data_inicio AND :data_fim) AS lista_espera,
+
+    (SELECT COUNT(*) FROM triagens 
+     WHERE data_de_inicio_cadastro_idoso BETWEEN :data_inicio AND :data_fim) AS total_triagens,
+
+    (SELECT COUNT(*) FROM triagens 
+     WHERE status = 'Em andamento' 
+       AND data_de_inicio_cadastro_idoso BETWEEN :data_inicio AND :data_fim) AS triagens_em_andamento,
+
+    (SELECT COUNT(*) FROM usuarios 
+     WHERE status_usuario = 'Ativo' 
+       AND data_de_cadastro_usuario BETWEEN :data_inicio AND :data_fim) AS usuarios_ativos;
+
+
+Informações que aparecerão na tabela de triagens em andamento da tela "Triagens".
+SELECT 
+    fi.nome_idoso AS nome,
+    fi.cpf_idoso AS cpf,
+    fi.data_nascimento AS nascimento,
+    t.etapa_atual AS etapa,
+    t.data_de_inicio_cadastro_idoso AS inicio_triagem
+FROM triagens t
+JOIN ficha_idosos fi ON t.id_idoso = fi.id_idoso
+WHERE t.status = 'Em andamento'
+  AND (:filtro_nome_cpf IS NULL 
+       OR fi.nome_idoso LIKE CONCAT('%', :filtro_nome_cpf, '%') 
+       OR fi.cpf_idoso LIKE CONCAT('%', :filtro_nome_cpf, '%'))
+
+  AND (:etapa IS NULL OR t.etapa_atual = :etapa)
+
+  AND (
+    (:tipo_data = 'nascimento' AND fi.data_nascimento BETWEEN :data_inicio AND :data_fim)
+    OR
+    (:tipo_data = 'triagem' AND t.data_de_inicio_cadastro_idoso BETWEEN :data_inicio AND :data_fim)
+  );
+
+Preenchimento da ficha do idoso pelo usuário:
+INSERT INTO ficha_idosos (
+    id_usuario,
+    nome_idoso,
+    endereco_idoso,
+    numero_idoso,
+    bairro_idoso,
+    cidade_idoso,
+    cep_idoso,
+    estado_idoso,
+    rg_idoso,
+    cpf_idoso,
+    titulo_eleitor,
+    carteira_profissional,
+    reservista,
+    certidao_nascimento,
+    certidao_casamento,
+    outros_documentos_idoso,
+    pai_nome,
+    mae_nome,
+    local_nascimento,
+    data_nascimento,
+    estado_civil_idoso,
+    nacionalidade_idoso,
+    profissão,
+    sexo,
+    religiao,
+    comentarios,
+    data_finalizacao_ficha
+) VALUES (
+    :id_usuario,
+    :nome,
+    :endereco,
+    :numero,
+    :bairro,
+    :cidade,
+    :cep,
+    :estado,
+    :rg,
+    :cpf,
+    :titulo_eleitor,
+    :carteira_profissional,
+    :reservista,
+    :certidao_nascimento,
+    :certidao_casamento,
+    :outros,
+    :nome_pai,
+    :nome_mae,
+    :local_nascimento,
+    :data_nascimento,
+    :estado_civil,
+    :nacionalidade,
+    :profissao,
+    :sexo,
+    :religiao,
+    :comentarios,
+    NOW()
+);
+
+Adicionar parentes ou conhecidos na tela "Ficha de triagem - Continuação"
+INSERT INTO parentes_ou_conhecidos (
+    id_idoso,
+    nome_parente_conhecido,
+    endereco_parente_conhecido,
+    cidade_parente_conhecido,
+    telefone_parente_conhecido
+) VALUES (
+    :id_idoso,
+    :nome,
+    :endereco,
+    :cidade,
+    :telefone
+);
+
+O usuário inserirá informações adicionais para o contrato na tela "Ficha de trigem - Contrato"
+INSERT INTO dados_complementares_contrato (
+    id_idoso,
+    situacao_ocupacional,
+    telefone_idoso,
+    nome_responsavel_solidario,
+    grau_de_parentesco,
+    logradouro_responsavel_solidario,
+    numero_responsavel_solidario,
+    bairro_responsavel_solidario,
+    cidade_responsavel_solidario,
+    cep_responsavel_solidario,
+    estado_responsavel_solidario,
+    telefone_responsavel_solidario,
+    cpf_responsavel_solidario,
+    estado_civil_responsavel_solidario,
+    rg_responsavel_solidario,
+    nacionalidade_responsavel_solidario,
+    nome_assistente_social_contrato,
+    nome_coordenador_administrativo_contrato,
+    data_finalizacao_dados_contrato
+) VALUES (
+    :id_idoso,
+    :situacao_ocupacional,
+    :telefone_idoso,
+    :nome_responsavel,
+    :grau_parentesco,
+    :logradouro,
+    :numero,
+    :bairro,
+    :cidade,
+    :cep,
+    :estado,
+    :telefone_responsavel,
+    :cpf,
+    :estado_civil,
+    :rg,
+    :nacionalidade,
+    :assistente_social,
+    :coordenador_administrativo,
+    NOW()
+);
+

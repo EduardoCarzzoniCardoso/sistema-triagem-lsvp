@@ -140,7 +140,7 @@ if ($indice_etapa_atual === false) $indice_etapa_atual = 0;
             <div class="logout-area"><i class="fas fa-bell"></i><button class="logout-button" onclick="window.location.href='<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>?logout=true'">Logout</button></div>
         </header>
         <nav class="main-nav">
-            <ul><li><a href="paginainicial.php">Início</a></li><li><a href="triagens.php" class="active">Triagens</a></li><li><a href="#">Idosos</a></li><li><a href="#">Usuário</a></li></ul>
+            <ul><li><a href="paginainicial.php">Início</a></li><li><a href="triagens.php" class="active">Triagens</a></li><li><a href="idosos.php">Idosos</a></li><li><a href="usuarios.php">Usuário</a></li></ul>
         </nav>
         <main class="main-content">
             <h1>Triagens</h1>

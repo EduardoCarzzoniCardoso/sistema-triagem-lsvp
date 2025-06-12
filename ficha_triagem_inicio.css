@@ -241,7 +241,6 @@ body.page-triagens .main-content {
   color: #003366;
 }
 
-/* Conteúdo da triagem */
 .triagem-form-content {
   flex: 1;
   display: flex;
@@ -297,7 +296,6 @@ textarea {
   grid-column: 1 / -1;
 }
 
-/* Botões */
 .form-buttons {
   display: flex;
   justify-content: flex-end;
@@ -333,4 +331,88 @@ textarea {
   background: #f8f9fc;
   border-radius: 12px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+/* Estilo Base para todos os botões da Sidebar */
+.sidebar-button {
+    display: block;
+    width: 80%;
+    padding: 12px 15px;
+    margin-bottom: 10px;
+    text-align: left;
+    font-size: 1em;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease-in-out;
+
+    background-color: #ffffff;
+    color: #000000;
+    border: 1px solid #ccc; 
+    text-decoration: none;
+}
+
+a.sidebar-button:hover {
+    background-color: #f8f9fa;
+    border-color: #007bff;
+}
+
+.sidebar-button.active {
+    background-color: #ffffff;
+    border: 1px solid #000000;
+    color: #007bff;
+    text-decoration: underline;
+    font-weight: bold;
+}
+
+.sidebar-button:disabled {
+    background-color: #f8f9fa; 
+    color: #adb5bd; 
+    border-color: #dee2e6; 
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+.form-grid > fieldset {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    
+    border: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+}
+
+.form-grid > fieldset > input[type="text"],
+.form-grid > fieldset > input[type="date"],
+.form-grid > fieldset > select {
+    flex: 1; 
+    min-width: 180px; 
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1em;
+    box-sizing: border-box;
+}
+
+.form-grid > fieldset > legend {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 0;
+    font-size: 1.1em;
+    font-weight: bold;
+    border-bottom: 1px solid #eee;
+}
+
+.triagem-layout {
+    display: flex;
+    align-items: flex-start; 
+    gap: 30px;
+}
+
+.triagem-sidebar {
+    flex: 0 0 280px; 
+}
+
+.triagem-form-content {
+    flex: 1; 
+    min-width: 0;
 }

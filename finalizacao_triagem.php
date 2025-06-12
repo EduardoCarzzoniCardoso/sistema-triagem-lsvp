@@ -37,6 +37,9 @@ $mensagem_class = '';
 function handle_file_upload($file_input_name, $id_triagem, $document_type) {
     if (isset($_FILES[$file_input_name]) && $_FILES[$file_input_name]['error'] == UPLOAD_ERR_OK) {
         $upload_dir = __DIR__ . '/uploads/';
+        if (!is_dir($upload_dir)) {
+            mkdir($upload_dir, 0777, true);
+        }
         $extensao = strtolower(pathinfo($_FILES[$file_input_name]['name'], PATHINFO_EXTENSION));
         $nome_arquivo = $document_type . "_" . $id_triagem . "_" . time() . "." . $extensao;
         $caminho_anexo = $upload_dir . $nome_arquivo;
@@ -64,21 +67,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ];
 
         $params = [
-            ':id_triagem' => $id_triagem_sessao,
-            ':id_usuario' => $id_usuario_logado,
-            ':certidao' => isset($_POST['certidao']) ? 1 : 0,
-            ':anexo_certidao' => $anexos['anexo_certidao'],
-            ':rg' => isset($_POST['rg']) ? 1 : 0,
-            ':anexo_rg' => $anexos['anexo_rg'],
-            ':cpf' => isset($_POST['cpf']) ? 1 : 0,
-            ':anexo_cpf' => $anexos['anexo_cpf'],
-            ':receituarios' => isset($_POST['receituarios']) ? 1 : 0,
-            ':anexo_receituarios' => $anexos['anexo_receituarios'],
-            ':medicamentos' => isset($_POST['medicamentos']) ? 1 : 0,
-            ':anexo_medicamentos' => $anexos['anexo_medicamentos'],
+            ':id_triagem' => $id_triagem_sessao, ':id_usuario' => $id_usuario_logado,
+            ':certidao' => isset($_POST['certidao']) ? 1 : 0, ':anexo_certidao' => $anexos['anexo_certidao'],
+            ':rg' => isset($_POST['rg']) ? 1 : 0, ':anexo_rg' => $anexos['anexo_rg'],
+            ':cpf' => isset($_POST['cpf']) ? 1 : 0, ':anexo_cpf' => $anexos['anexo_cpf'],
+            ':receituarios' => isset($_POST['receituarios']) ? 1 : 0, ':anexo_receituarios' => $anexos['anexo_receituarios'],
+            ':medicamentos' => isset($_POST['medicamentos']) ? 1 : 0, ':anexo_medicamentos' => $anexos['anexo_medicamentos'],
             ':roupas' => isset($_POST['roupas']) ? 1 : 0,
-            ':fotos' => isset($_POST['fotos']) ? 1 : 0,
-            ':anexo_fotos' => $anexos['anexo_fotos'],
+            ':fotos' => isset($_POST['fotos']) ? 1 : 0, ':anexo_fotos' => $anexos['anexo_fotos'],
         ];
 
         if ($existing_record) {
@@ -95,19 +91,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($_POST['finalizar_triagem'])) {
             $stmt_triagem = $pdo->prepare("UPDATE triagens SET etapa_atual = 'Finalizada', status = 'Concluida', id_usuario_finalizou_triagem = :id_usuario, data_finalizacao_geral_triagem = NOW() WHERE id_triagem = :id_triagem");
             $stmt_triagem->execute([':id_usuario' => $id_usuario_logado, ':id_triagem' => $id_triagem_sessao]);
-            
             $stmt_idoso = $pdo->prepare("UPDATE ficha_idosos SET data_finalizacao_ficha = NOW() WHERE id_idoso = :id_idoso");
             $stmt_idoso->execute([':id_idoso' => $id_idoso_sessao]);
-            
+            $_SESSION['mensagem_sucesso'] = "Triagem finalizada com sucesso!";
             unset($_SESSION['current_idoso_id']);
             unset($_SESSION['current_triagem_id']);
-            
             $pdo->commit();
             session_write_close();
             header("Location: triagens.php");
             exit();
         }
-
         $pdo->commit();
     } catch (Exception $e) {
         $pdo->rollBack();
@@ -157,10 +150,26 @@ if ($indice_etapa_atual === false) $indice_etapa_atual = 0;
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         .sidebar-button:disabled { background-color: #e9ecef; color: #6c757d; cursor: not-allowed; opacity: 0.7; }
-        .checklist-item { display: flex; align-items: center; gap: 15px; padding: 10px; border-bottom: 1px solid #eee; }
-        .checklist-item label { flex-grow: 1; margin: 0; }
-        .checklist-item .btn-action { flex-shrink: 0; }
+        .checklist-fieldset { display: block !important; border: 1px solid #dee2e6 !important; border-radius: 8px !important; padding: 1.5rem !important; margin-bottom: 1.5rem !important; }
+        .checklist-fieldset legend { width: auto; border-bottom: none; }
+        .checklist-item { display: flex; align-items: center; gap: 15px; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+        .checklist-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .checklist-item:first-child { padding-top: 0; }
+        .checklist-item .item-label { flex-grow: 1; margin: 0; display: flex; align-items: center; gap: 10px; font-weight: 500; }
+        .checklist-item input[type="file"] { display: none; }
+        .checklist-item .file-upload-label { background-color: #007bff; color: white; padding: 8px 12px; border-radius: 6px; cursor: pointer; transition: background-color 0.2s; white-space: nowrap; font-size: 0.9em; }
+        .checklist-item .file-upload-label:hover { background-color: #0056b3; }
+        .checklist-item .view-anexo-btn { background-color: #6c757d; margin-left: auto; color: white; text-decoration: none; padding: 8px 12px; border-radius: 6px; white-space: nowrap; font-size: 0.9em; }
+        .btn-action[disabled] { background-color: #adb5bd; cursor: not-allowed; }
+        .form-buttons { flex-wrap: wrap; }
         .final-action-button { width: 100%; padding: 15px; font-size: 1.2em; margin-top: 20px; }
+        .custom-checkbox { position: relative; display: inline-block; width: 20px; height: 20px; flex-shrink: 0; }
+        .custom-checkbox input { opacity: 0; width: 0; height: 0; }
+        .custom-checkbox .checkmark { position: absolute; top: 0; left: 0; height: 20px; width: 20px; background-color: #fff; border: 2px solid #adb5bd; border-radius: 4px; transition: all 0.2s; }
+        .custom-checkbox input:checked ~ .checkmark { background-color: #007bff; border-color: #007bff; }
+        .custom-checkbox .checkmark:after { content: ""; position: absolute; display: none; }
+        .custom-checkbox input:checked ~ .checkmark:after { display: block; }
+        .custom-checkbox .checkmark:after { left: 6px; top: 2px; width: 5px; height: 10px; border: solid white; border-width: 0 3px 3px 0; transform: rotate(45deg); }
     </style>
 </head>
 <body class="page-triagens">
@@ -170,7 +179,7 @@ if ($indice_etapa_atual === false) $indice_etapa_atual = 0;
             <div class="logout-area"><i class="fas fa-bell"></i><button class="logout-button" onclick="window.location.href='<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>?logout=true'">Logout</button></div>
         </header>
         <nav class="main-nav">
-            <ul><li><a href="paginainicial.php">Início</a></li><li><a href="triagens.php" class="active">Triagens</a></li><li><a href="#">Idosos</a></li><li><a href="#">Usuário</a></li></ul>
+            <ul><li><a href="paginainicial.php">Início</a></li><li><a href="triagens.php" class="active">Triagens</a></li><li><a href="idosos.php">Idosos</a></li><li><a href="usuarios.php">Usuário</a></li></ul>
         </nav>
         <main class="main-content">
             <h1>Triagens</h1>
@@ -197,20 +206,20 @@ if ($indice_etapa_atual === false) $indice_etapa_atual = 0;
                         <div class="admin-message <?= $mensagem_class ?>"><?= html_entity_decode(htmlspecialchars($mensagem)) ?></div>
                     <?php endif; ?>
                     <form method="POST" action="finalizacao_triagem.php" enctype="multipart/form-data">
-                        <fieldset>
+                        <fieldset class="checklist-fieldset">
                             <legend>Documentos e itens necessários</legend>
-                            <div class="checklist-item"><label><input type="checkbox" name="certidao" value="1" <?php echo !empty($dados_finalizacao['certidao_nasc_ou_casamento']) ? 'checked' : ''; ?>> Cópia de certidão de nascimento ou de casamento</label><?php if(!empty($dados_finalizacao['anexo_certidao_nasc_ou_casamento'])) echo "<a href='{$dados_finalizacao['anexo_certidao_nasc_ou_casamento']}' target='_blank'>Ver</a>"; ?><input type="file" name="anexo_certidao"></div>
-                            <div class="checklist-item"><label><input type="checkbox" name="rg" value="1" <?php echo !empty($dados_finalizacao['rg']) ? 'checked' : ''; ?>> RG</label><?php if(!empty($dados_finalizacao['anexo_rg'])) echo "<a href='{$dados_finalizacao['anexo_rg']}' target='_blank'>Ver</a>"; ?><input type="file" name="anexo_rg"></div>
-                            <div class="checklist-item"><label><input type="checkbox" name="cpf" value="1" <?php echo !empty($dados_finalizacao['cpf']) ? 'checked' : ''; ?>> CPF</label><?php if(!empty($dados_finalizacao['anexo_cpf'])) echo "<a href='{$dados_finalizacao['anexo_cpf']}' target='_blank'>Ver</a>"; ?><input type="file" name="anexo_cpf"></div>
-                            <div class="checklist-item"><label><input type="checkbox" name="receituarios" value="1" <?php echo !empty($dados_finalizacao['receituarios']) ? 'checked' : ''; ?>> Receituários</label><?php if(!empty($dados_finalizacao['anexo_receituarios'])) echo "<a href='{$dados_finalizacao['anexo_receituarios']}' target='_blank'>Ver</a>"; ?><input type="file" name="anexo_receituarios"></div>
-                            <div class="checklist-item"><label><input type="checkbox" name="medicamentos" value="1" <?php echo !empty($dados_finalizacao['medicamentos']) ? 'checked' : ''; ?>> Medicamentos</label><?php if(!empty($dados_finalizacao['anexo_medicamentos'])) echo "<a href='{$dados_finalizacao['anexo_medicamentos']}' target='_blank'>Ver</a>"; ?><input type="file" name="anexo_medicamentos"></div>
-                            <div class="checklist-item"><label><input type="checkbox" name="roupas" value="1" <?php echo !empty($dados_finalizacao['roupas_uso_pessoal']) ? 'checked' : ''; ?>> Roupas de uso pessoal</label></div>
-                            <div class="checklist-item"><label><input type="checkbox" name="fotos" value="1" <?php echo !empty($dados_finalizacao['duas_fotos_3x4']) ? 'checked' : ''; ?>> Duas fotos 3x4 recentes</label><?php if(!empty($dados_finalizacao['anexo_duas_fotos_3x4'])) echo "<a href='{$dados_finalizacao['anexo_duas_fotos_3x4']}' target='_blank'>Ver</a>"; ?><input type="file" name="anexo_fotos"></div>
+                            <div class="checklist-item"><label class="item-label"><label class="custom-checkbox"><input type="checkbox" name="certidao" value="1" <?php echo !empty($dados_finalizacao['certidao_nasc_ou_casamento']) ? 'checked' : ''; ?>><span class="checkmark"></span></label> Cópia de certidão de nascimento ou de casamento</label><?php if(!empty($dados_finalizacao['anexo_certidao_nasc_ou_casamento'])) echo "<a href='{$dados_finalizacao['anexo_certidao_nasc_ou_casamento']}' class='view-anexo-btn' target='_blank'>Ver Anexo</a>"; ?><label for="anexo_certidao" class="file-upload-label">Anexar Documento</label><input type="file" id="anexo_certidao" name="anexo_certidao"></div>
+                            <div class="checklist-item"><label class="item-label"><label class="custom-checkbox"><input type="checkbox" name="rg" value="1" <?php echo !empty($dados_finalizacao['rg']) ? 'checked' : ''; ?>><span class="checkmark"></span></label> RG</label><?php if(!empty($dados_finalizacao['anexo_rg'])) echo "<a href='{$dados_finalizacao['anexo_rg']}' class='view-anexo-btn' target='_blank'>Ver Anexo</a>"; ?><label for="anexo_rg" class="file-upload-label">Anexar Documento</label><input type="file" id="anexo_rg" name="anexo_rg"></div>
+                            <div class="checklist-item"><label class="item-label"><label class="custom-checkbox"><input type="checkbox" name="cpf" value="1" <?php echo !empty($dados_finalizacao['cpf']) ? 'checked' : ''; ?>><span class="checkmark"></span></label> CPF</label><?php if(!empty($dados_finalizacao['anexo_cpf'])) echo "<a href='{$dados_finalizacao['anexo_cpf']}' class='view-anexo-btn' target='_blank'>Ver Anexo</a>"; ?><label for="anexo_cpf" class="file-upload-label">Anexar Documento</label><input type="file" id="anexo_cpf" name="anexo_cpf"></div>
+                            <div class="checklist-item"><label class="item-label"><label class="custom-checkbox"><input type="checkbox" name="receituarios" value="1" <?php echo !empty($dados_finalizacao['receituarios']) ? 'checked' : ''; ?>><span class="checkmark"></span></label> Receituários</label><?php if(!empty($dados_finalizacao['anexo_receituarios'])) echo "<a href='{$dados_finalizacao['anexo_receituarios']}' class='view-anexo-btn' target='_blank'>Ver Anexo</a>"; ?><label for="anexo_receituarios" class="file-upload-label">Anexar Documento</label><input type="file" id="anexo_receituarios" name="anexo_receituarios"></div>
+                            <div class="checklist-item"><label class="item-label"><label class="custom-checkbox"><input type="checkbox" name="medicamentos" value="1" <?php echo !empty($dados_finalizacao['medicamentos']) ? 'checked' : ''; ?>><span class="checkmark"></span></label> Medicamentos</label><?php if(!empty($dados_finalizacao['anexo_medicamentos'])) echo "<a href='{$dados_finalizacao['anexo_medicamentos']}' class='view-anexo-btn' target='_blank'>Ver Anexo</a>"; ?><label for="anexo_medicamentos" class="file-upload-label">Anexar Documento</label><input type="file" id="anexo_medicamentos" name="anexo_medicamentos"></div>
+                            <div class="checklist-item"><label class="item-label"><label class="custom-checkbox"><input type="checkbox" name="roupas" value="1" <?php echo !empty($dados_finalizacao['roupas_uso_pessoal']) ? 'checked' : ''; ?>><span class="checkmark"></span></label> Roupas de uso pessoal</label></div>
+                            <div class="checklist-item"><label class="item-label"><label class="custom-checkbox"><input type="checkbox" name="fotos" value="1" <?php echo !empty($dados_finalizacao['duas_fotos_3x4']) ? 'checked' : ''; ?>><span class="checkmark"></span></label> Duas fotos 3x4 recentes</label><?php if(!empty($dados_finalizacao['anexo_duas_fotos_3x4'])) echo "<a href='{$dados_finalizacao['anexo_duas_fotos_3x4']}' class='view-anexo-btn' target='_blank'>Ver Anexo</a>"; ?><label for="anexo_fotos" class="file-upload-label">Anexar Documento</label><input type="file" id="anexo_fotos" name="anexo_fotos"></div>
                         </fieldset>
-                        <fieldset>
+                        <fieldset class="checklist-fieldset">
                             <legend>Relatórios e contrato</legend>
-                            <div class="checklist-item"><label><input type="checkbox" name="gerar_relatorio" value="1" disabled> Gerar relatório de triagem completa</label><button type="button" class="btn-action" disabled>Gerar</button></div>
-                            <div class="checklist-item"><label><input type="checkbox" name="gerar_contrato" value="1" disabled> Gerar contrato</label><button type="button" class="btn-action" disabled>Gerar</button></div>
+                            <div class="checklist-item"><label class="item-label"><label class="custom-checkbox"><input type="checkbox" name="gerar_relatorio" value="1" disabled><span class="checkmark"></span></label> Gerar relatório de triagem completa</label><button type="button" class="btn-action" disabled>Gerar</button></div>
+                            <div class="checklist-item"><label class="item-label"><label class="custom-checkbox"><input type="checkbox" name="gerar_contrato" value="1" disabled><span class="checkmark"></span></label> Gerar contrato</label><button type="button" class="btn-action" disabled>Gerar</button></div>
                         </fieldset>
                         <div class="form-buttons">
                              <a href="parecer_psicologico.php?id_idoso=<?= $id_idoso_sessao ?>&id_triagem=<?= $id_triagem_sessao ?>" class="btn-secondary">Voltar</a>
