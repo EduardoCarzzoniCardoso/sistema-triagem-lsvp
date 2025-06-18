@@ -110,8 +110,6 @@ $stmt_andamento = $pdo->prepare($query_andamento);
 $stmt_andamento->execute($params_andamento);
 $contadores['triagens_andamento'] = $stmt_andamento->fetchColumn();
 
-
-// --- Contagem de Usuários Ativos (status_usuario = 'Ativo') ---
 $query_usuarios_ativos = "SELECT COUNT(*) FROM usuarios WHERE status_usuario = 'Ativo'";
 $params_usuarios_ativos = [];
 
