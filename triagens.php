@@ -106,6 +106,7 @@ function formatDate($date) {
     <link rel="stylesheet" href="paginainicial.css">
     <link rel="stylesheet" href="triagens.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="chatbot.css">
     <style>
         .toast-notification {
             visibility: hidden;
@@ -139,7 +140,9 @@ function formatDate($date) {
     <div class="container">
         <header class="header-top">
             <div class="logo-area"><img src="images/logo_lvsp2.png" alt="Logo SVP Brasil"><span class="username-display"><?php echo htmlspecialchars($nome_usuario_logado); ?></span></div>
-            <div class="logout-area"><i class="fas fa-bell"></i><button class="logout-button" onclick="window.location.href='<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>?logout=true'">Logout</button></div>
+            <div class="logout-area">
+                <button class="logout-button" onclick="window.location.href='<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>?logout=true'">Logout</button>
+            </div>
         </header>
         <nav class="main-nav">
             <ul>
@@ -211,5 +214,9 @@ function formatDate($date) {
         });
     </script>
     <?php endif; ?>
+    <script>
+        const userNameLoggedIn = "<?php echo htmlspecialchars($nome_usuario_logado); ?>";
+    </script>
+    <script src="chatbot.js"></script>
 </body>
 </html>

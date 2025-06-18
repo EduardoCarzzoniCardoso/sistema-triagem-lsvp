@@ -18,7 +18,7 @@ if (isset($_GET['id_idoso']) && isset($_GET['id_triagem'])) {
     exit();
 }
 
-if (!isset($_SESSION['current_idoso_id'])) {
+if (!isset($_SESSION['current_idoso_id']) || !isset($_SESSION['current_triagem_id'])) {
     header("Location: ficha_triagem_inicio.php");
     exit();
 }
@@ -100,9 +100,6 @@ $ordem_etapas = [
     'Parecer Psicológico' => 'parecer_psicologico.php',
     'Finalização da Triagem' => 'finalizacao_triagem.php',
 ];
-$etapa_keys = array_keys($ordem_etapas);
-$indice_etapa_atual = array_search($etapa_atual_bd, $etapa_keys);
-if ($indice_etapa_atual === false) $indice_etapa_atual = 0;
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -112,6 +109,7 @@ if ($indice_etapa_atual === false) $indice_etapa_atual = 0;
     <title>Parecer Médico</title>
     <link rel="stylesheet" href="paginainicial.css">
     <link rel="stylesheet" href="ficha_triagem_inicio.css">
+    <link rel="stylesheet" href="chatbot.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         .sidebar-button:disabled { background-color: #e9ecef; color: #6c757d; cursor: not-allowed; opacity: 0.7; }
@@ -123,7 +121,7 @@ if ($indice_etapa_atual === false) $indice_etapa_atual = 0;
     <div class="container">
         <header class="header-top">
             <div class="logo-area"><img src="images/logo_lvsp2.png" alt="Logo SVP Brasil"><span class="username-display"><?php echo htmlspecialchars($nome_usuario_logado); ?></span></div>
-            <div class="logout-area"><i class="fas fa-bell"></i><button class="logout-button" onclick="window.location.href='<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>?logout=true'">Logout</button></div>
+            <div class="logout-area"><button class="logout-button" onclick="window.location.href='<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>?logout=true'">Logout</button></div>
         </header>
         <nav class="main-nav">
             <ul><li><a href="paginainicial.php">Início</a></li><li><a href="triagens.php" class="active">Triagens</a></li><li><a href="idosos.php">Idosos</a></li><li><a href="usuarios.php">Usuário</a></li></ul>
@@ -132,20 +130,14 @@ if ($indice_etapa_atual === false) $indice_etapa_atual = 0;
             <h1>Triagens</h1>
             <div class="triagem-layout">
                 <aside class="triagem-sidebar">
-                    <?php
-                    $indice_pagina_atual = 5;
-                    foreach ($ordem_etapas as $etapa_nome => $etapa_arquivo) {
-                        $etapa_indice_loop = array_search($etapa_nome, $etapa_keys);
-                        $link_url = "{$etapa_arquivo}?id_idoso={$id_idoso_sessao}&id_triagem={$id_triagem_sessao}";
-                        if ($etapa_indice_loop < $indice_etapa_atual) {
-                            echo "<a href='{$link_url}' class='sidebar-button'>{$etapa_nome}</a>";
-                        } elseif ($etapa_indice_loop == $indice_pagina_atual) {
-                            echo "<button class='sidebar-button active'>{$etapa_nome}</button>";
-                        } else {
-                            echo "<button class='sidebar-button' disabled>{$etapa_nome}</button>";
-                        }
-                    }
-                    ?>
+                    <a href="ficha_triagem_inicio.php<?php echo ($id_idoso_sessao && $id_triagem_sessao) ? "?id_idoso={$id_idoso_sessao}&id_triagem={$id_triagem_sessao}" : "?nova=true"; ?>" class="sidebar-button">Ficha de Triagem - Início</a>
+                    <a href="ficha_triagem_continuacao.php<?php echo ($id_idoso_sessao && $id_triagem_sessao) ? "?id_idoso={$id_idoso_sessao}&id_triagem={$id_triagem_sessao}" : "#"; ?>" class="sidebar-button<?php echo (empty($id_idoso_sessao) ? ' disabled' : ''); ?>">Ficha de Triagem - Continuação</a>
+                    <a href="ficha_triagem_contrato.php<?php echo ($id_idoso_sessao && $id_triagem_sessao) ? "?id_idoso={$id_idoso_sessao}&id_triagem={$id_triagem_sessao}" : "#"; ?>" class="sidebar-button<?php echo (empty($id_idoso_sessao) ? ' disabled' : ''); ?>">Ficha de Triagem - Contrato</a>
+                    <a href="parecer_coordenador.php<?php echo ($id_idoso_sessao && $id_triagem_sessao) ? "?id_idoso={$id_idoso_sessao}&id_triagem={$id_triagem_sessao}" : "#"; ?>" class="sidebar-button<?php echo (empty($id_idoso_sessao) ? ' disabled' : ''); ?>">Parecer do(a) Coordenador(a)</a>
+                    <a href="parecer_diretoria.php<?php echo ($id_idoso_sessao && $id_triagem_sessao) ? "?id_idoso={$id_idoso_sessao}&id_triagem={$id_triagem_sessao}" : "#"; ?>" class="sidebar-button<?php echo (empty($id_idoso_sessao) ? ' disabled' : ''); ?>">Parecer da Diretoria</a>
+                    <a href="parecer_medico.php<?php echo ($id_idoso_sessao && $id_triagem_sessao) ? "?id_idoso={$id_idoso_sessao}&id_triagem={$id_triagem_sessao}" : "#"; ?>" class="sidebar-button active<?php echo (empty($id_idoso_sessao) ? ' disabled' : ''); ?>">Parecer do Médico</a>
+                    <a href="parecer_psicologico.php<?php echo ($id_idoso_sessao && $id_triagem_sessao) ? "?id_idoso={$id_idoso_sessao}&id_triagem={$id_triagem_sessao}" : "#"; ?>" class="sidebar-button<?php echo (empty($id_idoso_sessao) ? ' disabled' : ''); ?>">Parecer Psicológico</a>
+                    <a href="finalizacao_triagem.php<?php echo ($id_idoso_sessao && $id_triagem_sessao) ? "?id_idoso={$id_idoso_sessao}&id_triagem={$id_triagem_sessao}" : "#"; ?>" class="sidebar-button<?php echo (empty($id_idoso_sessao) ? ' disabled' : ''); ?>">Finalização da Triagem</a>
                 </aside>
                 <section class="triagem-form-content">
                     <h2>Parecer Médico</h2>
@@ -177,5 +169,9 @@ if ($indice_etapa_atual === false) $indice_etapa_atual = 0;
             Sistema de Triagem LSVP - Lar São Vicente de Paulo | © 2025 - Versão 1.0
         </footer>
     </div>
+    <script>
+        const userNameLoggedIn = "<?php echo htmlspecialchars($nome_usuario_logado); ?>";
+    </script>
+    <script src="chatbot.js"></script>
 </body>
 </html>

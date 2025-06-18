@@ -1,6 +1,10 @@
 <?php
 require_once 'logout_handler.php';
 
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
 if (!isset($_SESSION['usuario_logado']) || $_SESSION['usuario_logado'] !== true) {
     header("Location: login.php");
     exit();
@@ -25,140 +29,105 @@ $contadores = [
     'usuarios_ativos' => 0,
 ];
 
-$query_acolhidos = "SELECT COUNT(DISTINCT t.id_idoso) FROM parecer_coordenador_diretoria pcd JOIN triagens t ON pcd.id_triagem = t.id_triagem";
-$current_where_acolhidos = " pcd.status = 'Aprovado'";
-$where_clause_acolhidos_data = '';
+$query_acolhidos = "SELECT COUNT(DISTINCT i.id_idoso)
+                    FROM ficha_idosos AS i
+                    JOIN triagens AS t ON i.id_idoso = t.id_idoso
+                    JOIN parecer_coordenador_diretoria AS pcd2 ON t.id_triagem = pcd2.id_triagem AND pcd2.tipo = 'Diretoria' AND pcd2.ordem = 'Segundo'
+                    WHERE pcd2.status = 'Aprovado'";
 $params_acolhidos = [];
 
 if (!empty($data_inicial_filtro) && !empty($data_final_filtro)) {
-    $where_clause_acolhidos_data = " AND DATE(pcd.data_finalizacao_parecer_coord_dir) BETWEEN :data_inicial AND :data_final";
+    $query_acolhidos .= " AND DATE(pcd2.data_finalizacao_parecer_coord_dir) BETWEEN :data_inicial AND :data_final";
     $params_acolhidos[':data_inicial'] = $data_inicial_filtro;
     $params_acolhidos[':data_final'] = $data_final_filtro;
 } elseif (!empty($data_inicial_filtro)) {
-    $where_clause_acolhidos_data = " AND DATE(pcd.data_finalizacao_parecer_coord_dir) >= :data_inicial";
+    $query_acolhidos .= " AND DATE(pcd2.data_finalizacao_parecer_coord_dir) >= :data_inicial";
     $params_acolhidos[':data_inicial'] = $data_inicial_filtro;
 } elseif (!empty($data_final_filtro)) {
-    $where_clause_acolhidos_data = " AND DATE(pcd.data_finalizacao_parecer_coord_dir) <= :data_final";
+    $query_acolhidos .= " AND DATE(pcd2.data_finalizacao_parecer_coord_dir) <= :data_final";
     $params_acolhidos[':data_final'] = $data_final_filtro;
 }
-
-$stmt_acolhidos = $pdo->prepare($query_acolhidos . " WHERE " . $current_where_acolhidos . $where_clause_acolhidos_data);
+$stmt_acolhidos = $pdo->prepare($query_acolhidos);
 $stmt_acolhidos->execute($params_acolhidos);
 $contadores['idosos_acolhidos'] = $stmt_acolhidos->fetchColumn();
 
-
-$query_espera = "SELECT COUNT(DISTINCT t.id_idoso) FROM parecer_coordenador_diretoria pcd JOIN triagens t ON pcd.id_triagem = t.id_triagem";
-$current_where_espera = " pcd.status = 'Lista de Espera'";
-$where_clause_espera_data = '';
+$query_espera = "SELECT COUNT(DISTINCT i.id_idoso)
+                 FROM ficha_idosos AS i
+                 JOIN triagens AS t ON i.id_idoso = t.id_idoso
+                 JOIN parecer_coordenador_diretoria AS pcd1 ON t.id_triagem = pcd1.id_triagem AND pcd1.tipo = 'Diretoria' AND pcd1.ordem = 'Primeiro'
+                 JOIN parecer_coordenador_diretoria AS pcd2 ON t.id_triagem = pcd2.id_triagem AND pcd2.tipo = 'Diretoria' AND pcd2.ordem = 'Segundo'
+                 WHERE pcd1.status = 'Lista de Espera' AND pcd2.status = 'Aprovado'";
 $params_espera = [];
 
 if (!empty($data_inicial_filtro) && !empty($data_final_filtro)) {
-    $where_clause_espera_data = " AND DATE(pcd.data_finalizacao_parecer_coord_dir) BETWEEN :data_inicial AND :data_final";
+    $query_espera .= " AND DATE(pcd1.data_finalizacao_parecer_coord_dir) BETWEEN :data_inicial AND :data_final";
     $params_espera[':data_inicial'] = $data_inicial_filtro;
     $params_espera[':data_final'] = $data_final_filtro;
 } elseif (!empty($data_inicial_filtro)) {
-    $where_clause_espera_data = " AND DATE(pcd.data_finalizacao_parecer_coord_dir) >= :data_inicial";
+    $query_espera .= " AND DATE(pcd1.data_finalizacao_parecer_coord_dir) >= :data_inicial";
     $params_espera[':data_inicial'] = $data_inicial_filtro;
 } elseif (!empty($data_final_filtro)) {
-    $where_clause_espera_data = " AND DATE(pcd.data_finalizacao_parecer_coord_dir) <= :data_final";
+    $query_espera .= " AND DATE(pcd1.data_finalizacao_parecer_coord_dir) <= :data_final";
     $params_espera[':data_final'] = $data_final_filtro;
 }
-
-$stmt_espera = $pdo->prepare($query_espera . " WHERE " . $current_where_espera . $where_clause_espera_data);
+$stmt_espera = $pdo->prepare($query_espera);
 $stmt_espera->execute($params_espera);
 $contadores['idosos_espera'] = $stmt_espera->fetchColumn();
 
-
-$where_data_clause_triagens = '';
-$params_triagens = [];
+$query_realizadas = "SELECT COUNT(*) FROM triagens WHERE status = 'Concluida'";
+$params_realizadas = [];
 
 if (!empty($data_inicial_filtro) && !empty($data_final_filtro)) {
-    $where_data_clause_triagens = " WHERE DATE(data_coluna) BETWEEN :data_inicial AND :data_final";
-    $params_triagens[':data_inicial'] = $data_inicial_filtro;
-    $params_triagens[':data_final'] = $data_final_filtro;
+    $query_realizadas .= " AND DATE(data_finalizacao_geral_triagem) BETWEEN :data_inicial AND :data_final";
+    $params_realizadas[':data_inicial'] = $data_inicial_filtro;
+    $params_realizadas[':data_final'] = $data_final_filtro;
 } elseif (!empty($data_inicial_filtro)) {
-    $where_data_clause_triagens = " WHERE DATE(data_coluna) >= :data_inicial";
-    $params_triagens[':data_inicial'] = $data_inicial_filtro;
+    $query_realizadas .= " AND DATE(data_finalizacao_geral_triagem) >= :data_inicial";
+    $params_realizadas[':data_inicial'] = $data_inicial_filtro;
 } elseif (!empty($data_final_filtro)) {
-    $where_data_clause_triagens = " WHERE DATE(data_coluna) <= :data_final";
-    $params_triagens[':data_final'] = $data_final_filtro;
+    $query_realizadas .= " AND DATE(data_finalizacao_geral_triagem) <= :data_final";
+    $params_realizadas[':data_final'] = $data_final_filtro;
 }
-
-
-$query_realizadas = "SELECT COUNT(*) FROM triagens";
-$current_where_realizadas = " status = 'Concluida'";
-$final_query_realizadas = $query_realizadas;
-$final_params_realizadas = [];
-
-if (!empty($where_data_clause_triagens)) {
-    $final_query_realizadas .= str_replace('data_coluna', 'data_finalizacao_geral_triagem', $where_data_clause_triagens);
-    $final_params_realizadas = $params_triagens;
-    if (!empty($current_where_realizadas)) {
-        $final_query_realizadas = str_replace('WHERE', 'WHERE ' . $current_where_realizadas . ' AND', $final_query_realizadas);
-    }
-} else {
-    if (!empty($current_where_realizadas)) {
-        $final_query_realizadas .= " WHERE " . $current_where_realizadas;
-    }
-}
-$stmt_realizadas = $pdo->prepare($final_query_realizadas);
-$stmt_realizadas->execute($final_params_realizadas);
+$stmt_realizadas = $pdo->prepare($query_realizadas);
+$stmt_realizadas->execute($params_realizadas);
 $contadores['triagens_realizadas'] = $stmt_realizadas->fetchColumn();
 
-$query_andamento = "SELECT COUNT(*) FROM triagens";
-$current_where_andamento = " status = 'Em andamento'";
-$final_query_andamento = $query_andamento;
-$final_params_andamento = [];
+$query_andamento = "SELECT COUNT(*) FROM triagens WHERE status = 'Em andamento'";
+$params_andamento = [];
 
-if (!empty($where_data_clause_triagens)) {
-    $final_query_andamento .= str_replace('data_coluna', 'data_de_inicio_cadastro_idoso', $where_data_clause_triagens);
-    $final_params_andamento = $params_triagens;
-    if (!empty($current_where_andamento)) {
-        $final_query_andamento = str_replace('WHERE', 'WHERE ' . $current_where_andamento . ' AND', $final_query_andamento);
-    }
-} else {
-    if (!empty($current_where_andamento)) {
-        $final_query_andamento .= " WHERE " . $current_where_andamento;
-    }
+if (!empty($data_inicial_filtro) && !empty($data_final_filtro)) {
+    $query_andamento .= " AND DATE(data_de_inicio_cadastro_idoso) BETWEEN :data_inicial AND :data_final";
+    $params_andamento[':data_inicial'] = $data_inicial_filtro;
+    $params_andamento[':data_final'] = $data_final_filtro;
+} elseif (!empty($data_inicial_filtro)) {
+    $query_andamento .= " AND DATE(data_de_inicio_cadastro_idoso) >= :data_inicial";
+    $params_andamento[':data_inicial'] = $data_inicial_filtro;
+} elseif (!empty($data_final_filtro)) {
+    $query_andamento .= " AND DATE(data_de_inicio_cadastro_idoso) <= :data_final";
+    $params_andamento[':data_final'] = $data_final_filtro;
 }
-$stmt_andamento = $pdo->prepare($final_query_andamento);
-$stmt_andamento->execute($final_params_andamento);
+$stmt_andamento = $pdo->prepare($query_andamento);
+$stmt_andamento->execute($params_andamento);
 $contadores['triagens_andamento'] = $stmt_andamento->fetchColumn();
 
 
-$query_usuarios_ativos = "SELECT COUNT(*) FROM usuarios";
-$current_where_ativos = " status_usuario = 'Ativo'";
-$final_query_usuarios_ativos = $query_usuarios_ativos;
-$final_params_usuarios_ativos = [];
+// --- Contagem de Usuários Ativos (status_usuario = 'Ativo') ---
+$query_usuarios_ativos = "SELECT COUNT(*) FROM usuarios WHERE status_usuario = 'Ativo'";
+$params_usuarios_ativos = [];
 
-$where_data_clause_usuarios = '';
 if (!empty($data_inicial_filtro) && !empty($data_final_filtro)) {
-    $where_data_clause_usuarios = " WHERE DATE(ultimo_acesso) BETWEEN :data_inicial AND :data_final";
-    $final_params_usuarios_ativos[':data_inicial'] = $data_inicial_filtro;
-    $final_params_usuarios_ativos[':data_final'] = $data_final_filtro;
+    $query_usuarios_ativos .= " AND DATE(ultimo_acesso) BETWEEN :data_inicial AND :data_final";
+    $params_usuarios_ativos[':data_inicial'] = $data_inicial_filtro;
+    $params_usuarios_ativos[':data_final'] = $data_final_filtro;
 } elseif (!empty($data_inicial_filtro)) {
-    $where_data_clause_usuarios = " WHERE DATE(ultimo_acesso) >= :data_inicial";
-    $final_params_usuarios_ativos[':data_inicial'] = $data_inicial_filtro;
+    $query_usuarios_ativos .= " AND DATE(ultimo_acesso) >= :data_inicial";
+    $params_usuarios_ativos[':data_inicial'] = $data_inicial_filtro;
 } elseif (!empty($data_final_filtro)) {
-    $where_data_clause_usuarios = " WHERE DATE(ultimo_acesso) <= :data_final";
-    $final_params_usuarios_ativos[':data_final'] = $data_final_filtro;
+    $query_usuarios_ativos .= " AND DATE(ultimo_acesso) <= :data_final";
+    $params_usuarios_ativos[':data_final'] = $data_final_filtro;
 }
-
-
-if (!empty($where_data_clause_usuarios)) {
-    $final_query_usuarios_ativos = $query_usuarios_ativos;
-    if (!empty($current_where_ativos)) {
-        $final_query_usuarios_ativos .= " WHERE " . $current_where_ativos;
-    }
-    $final_query_usuarios_ativos .= str_replace('WHERE', ' AND', $where_data_clause_usuarios);
-} else {
-    if (!empty($current_where_ativos)) {
-        $final_query_usuarios_ativos .= " WHERE " . $current_where_ativos;
-    }
-}
-
-$stmt_usuarios_ativos = $pdo->prepare($final_query_usuarios_ativos);
-$stmt_usuarios_ativos->execute($final_params_usuarios_ativos);
+$stmt_usuarios_ativos = $pdo->prepare($query_usuarios_ativos);
+$stmt_usuarios_ativos->execute($params_usuarios_ativos);
 $contadores['usuarios_ativos'] = $stmt_usuarios_ativos->fetchColumn();
 
 ?>
@@ -170,6 +139,7 @@ $contadores['usuarios_ativos'] = $stmt_usuarios_ativos->fetchColumn();
     <title>Início - Sistema de Triagem LSVP</title>
     <link rel="stylesheet" href="paginainicial.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="chatbot.css">
 </head>
 <body>
     <div class="container">
@@ -179,7 +149,6 @@ $contadores['usuarios_ativos'] = $stmt_usuarios_ativos->fetchColumn();
                 <span class="username-display"><?php echo htmlspecialchars($nome_usuario_logado); ?></span>
             </div>
             <div class="logout-area">
-                <i class="fas fa-bell"></i>
                 <button class="logout-button" onclick="window.location.href='<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>?logout=true'">Logout</button>
             </div>
         </header>
@@ -236,5 +205,9 @@ $contadores['usuarios_ativos'] = $stmt_usuarios_ativos->fetchColumn();
             Sistema de Triagem LSVP - Lar São Vicente de Paulo | © 2025 - Versão 1.0
         </footer>
     </div>
+    <script>
+        const userNameLoggedIn = "<?php echo htmlspecialchars($nome_usuario_logado); ?>";
+    </script>
+    <script src="chatbot.js"></script>
 </body>
 </html>

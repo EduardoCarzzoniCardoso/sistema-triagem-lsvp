@@ -26,21 +26,27 @@ $status_filtro = $_GET['status_filtro'] ?? '';
 $aba_ativa = $_GET['aba'] ?? 'espera';
 
 $idosos = [];
+
+// A query busca ambos os pareceres da diretoria, se existirem
 $query_base = "SELECT
                     i.nome_idoso,
                     i.cpf_idoso,
                     i.data_nascimento,
-                    pcd.status AS status_decisao,
                     t.data_de_inicio_cadastro_idoso,
-                    pcd.data_finalizacao_parecer_coord_dir AS data_acolhimento,
                     ft.caminho_relatorio_gerado,
-                    ft.caminho_contrato_gerado
+                    ft.caminho_contrato_gerado,
+                    pcd1.status AS status_parecer_primeiro,
+                    pcd1.data_finalizacao_parecer_coord_dir AS data_parecer_primeiro,
+                    pcd2.status AS status_parecer_segundo,
+                    pcd2.data_finalizacao_parecer_coord_dir AS data_acolhimento
                 FROM
                     ficha_idosos AS i
                 JOIN
                     triagens AS t ON i.id_idoso = t.id_idoso
                 LEFT JOIN
-                    parecer_coordenador_diretoria AS pcd ON t.id_triagem = pcd.id_triagem
+                    parecer_coordenador_diretoria AS pcd1 ON t.id_triagem = pcd1.id_triagem AND pcd1.tipo = 'Diretoria' AND pcd1.ordem = 'Primeiro'
+                LEFT JOIN
+                    parecer_coordenador_diretoria AS pcd2 ON t.id_triagem = pcd2.id_triagem AND pcd2.tipo = 'Diretoria' AND pcd2.ordem = 'Segundo'
                 LEFT JOIN
                     finalizacao_triagem AS ft ON t.id_triagem = ft.id_triagem";
 
@@ -59,7 +65,9 @@ if (!empty($tipo_data_filtro) && (!empty($data_inicial_filtro) || !empty($data_f
     } elseif ($tipo_data_filtro === 'data_inicio_triagem') {
         $data_coluna = 't.data_de_inicio_cadastro_idoso';
     } elseif ($tipo_data_filtro === 'data_acolhimento') {
-        $data_coluna = 'pcd.data_finalizacao_parecer_coord_dir';
+        $data_coluna = 'pcd2.data_finalizacao_parecer_coord_dir';
+    } elseif ($tipo_data_filtro === 'data_primeiro_parecer') {
+        $data_coluna = 'pcd1.data_finalizacao_parecer_coord_dir';
     }
 
     if (!empty($data_coluna)) {
@@ -77,27 +85,44 @@ if (!empty($tipo_data_filtro) && (!empty($data_inicial_filtro) || !empty($data_f
     }
 }
 
+// Lógica de filtro PRINCIPAL para as abas, baseada nas SUAS DEFINIÇÕES CLARAS.
 if ($aba_ativa === 'espera') {
-    $where_clauses[] = "pcd.status = 'Lista de Espera'";
+    // Para 'Lista de Espera': Primeiro parecer é 'Lista de Espera' E o segundo parecer é 'Aprovado'
+    $where_clauses[] = "pcd1.status = 'Lista de Espera'";
+    $where_clauses[] = "pcd2.status = 'Aprovado'";
 } elseif ($aba_ativa === 'acolhidos') {
-    $where_clauses[] = "pcd.status = 'Aprovado'";
+    // Para 'Acolhidos': Ambos os pareceres são 'Aprovado'
+    $where_clauses[] = "pcd1.status = 'Aprovado'";
+    $where_clauses[] = "pcd2.status = 'Aprovado'";
 }
 
+// O filtro de status geral foi ajustado para refletir a nova lógica das abas
 if (!empty($status_filtro)) {
     if ($status_filtro === 'Ativo') {
-        $where_clauses[] = "(pcd.status = 'Aprovado' OR pcd.status = 'Lista de Espera')";
+        // Ativo = (Primeiro: Lista de Espera E Segundo: Aprovado) OU (Primeiro: Aprovado E Segundo: Aprovado)
+        $where_clauses[] = "( (pcd1.status = 'Lista de Espera' AND pcd2.status = 'Aprovado') OR (pcd1.status = 'Aprovado' AND pcd2.status = 'Aprovado') )";
     } elseif ($status_filtro === 'Inativo') {
-        $where_clauses[] = "(pcd.status != 'Aprovado' AND pcd.status != 'Lista de Espera')";
+        // Inativo: idoso tem qualquer parecer da diretoria como 'Rejeitado'
+        $where_clauses[] = "(pcd1.status = 'Rejeitado' OR pcd2.status = 'Rejeitado')";
     }
+} else {
+    // Se nenhum filtro de status for aplicado, precisamos garantir que apenas os idosos
+    // que se enquadram nas condições das abas (Lista de Espera OU Aprovado) sejam exibidos,
+    // e que os Rejeitados não apareçam.
+    // Esta condição é vital para não mostrar idosos rejeitados ou sem pareceres válidos.
+    $where_clauses[] = "
+        ( (pcd1.status = 'Lista de Espera' AND pcd2.status = 'Aprovado') OR
+          (pcd1.status = 'Aprovado' AND pcd2.status = 'Aprovado') )
+    ";
 }
 
+
 $full_query = $query_base;
+
 if (count($where_clauses) > 0) {
-    $where_clauses[] = "pcd.status IS NOT NULL";
     $full_query .= " WHERE " . implode(" AND ", $where_clauses);
-} else {
-    $full_query .= " WHERE pcd.status IS NOT NULL";
 }
+
 $full_query .= " ORDER BY i.nome_idoso ASC";
 
 $stmt = $pdo->prepare($full_query);
@@ -128,6 +153,7 @@ function formatDate($date) {
     <title>Idosos - Sistema de Triagem LSVP</title>
     <link rel="stylesheet" href="paginainicial.css">
     <link rel="stylesheet" href="idosos.css">
+    <link rel="stylesheet" href="chatbot.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body class="page-idosos">
@@ -138,7 +164,6 @@ function formatDate($date) {
                 <span class="username-display"><?php echo htmlspecialchars($nome_usuario_logado); ?></span>
             </div>
             <div class="logout-area">
-                <i class="fas fa-bell"></i>
                 <button class="logout-button" onclick="window.location.href='<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>?logout=true'">Logout</button>
             </div>
         </header>
@@ -189,6 +214,7 @@ function formatDate($date) {
                                     <?php else: ?>
                                         <option value="data_nascimento" <?= $tipo_data_filtro == 'data_nascimento' ? 'selected' : '' ?>>Data de nascimento</option>
                                         <option value="data_inicio_triagem" <?= $tipo_data_filtro == 'data_inicio_triagem' ? 'selected' : '' ?>>Data início triagem</option>
+                                        <option value="data_primeiro_parecer" <?= $tipo_data_filtro == 'data_primeiro_parecer' ? 'selected' : '' ?>>Data 1º Parecer</option>
                                     <?php endif; ?>
                                 </select>
                             </div>
@@ -198,7 +224,7 @@ function formatDate($date) {
                                 <select name="status_filtro">
                                     <option value="">Todos</option>
                                     <option value="Ativo" <?= $status_filtro == 'Ativo' ? 'selected' : '' ?>>Ativo</option>
-                                    <option value="Inativo" <?= $status_filtro == 'Inativo' ? 'selected' : '' ?>>Inativo</option>
+                                    <option value="Inativo" <?= $status_filtro == 'Inativo' ? 'selected' : '' ?>>Inativo (Rejeitado)</option>
                                 </select>
                             </div>
 
@@ -228,7 +254,7 @@ function formatDate($date) {
                                             <td><?= htmlspecialchars($idoso['nome_idoso']) ?></td>
                                             <td><?= htmlspecialchars(formatCpf($idoso['cpf_idoso'])) ?></td>
                                             <td><?= htmlspecialchars(formatDate($idoso['data_nascimento'])) ?></td>
-                                            <td>Ativo</td>
+                                            <td>Acolhido</td>
                                             <td><?= htmlspecialchars(formatDate($idoso['data_acolhimento'])) ?></td>
                                             <td class="td-actions">
                                                 <?php if (!empty($idoso['caminho_relatorio_gerado'])): ?>
@@ -270,7 +296,7 @@ function formatDate($date) {
                                             <td><?= htmlspecialchars($idoso['nome_idoso']) ?></td>
                                             <td><?= htmlspecialchars(formatCpf($idoso['cpf_idoso'])) ?></td>
                                             <td><?= htmlspecialchars(formatDate($idoso['data_nascimento'])) ?></td>
-                                            <td>Ativo</td>
+                                            <td>Lista de Espera</td>
                                             <td><?= htmlspecialchars(formatDate($idoso['data_de_inicio_cadastro_idoso'])) ?></td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -291,4 +317,8 @@ function formatDate($date) {
         </footer>
     </div>
 </body>
+    <script>
+        const userNameLoggedIn = "<?php echo htmlspecialchars($nome_usuario_logado); ?>";
+    </script>
+    <script src="chatbot.js"></script>
 </html>

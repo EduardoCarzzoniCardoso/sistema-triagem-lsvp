@@ -113,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $id_usuario) {
             border-radius: 6px;
             font-size: 1em;
             box-sizing: border-box;
-            height: 40px; /* Altura padrão para campos */
+            height: 40px;
         }
         .form-actions {
             display: flex;
@@ -132,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $id_usuario) {
             transition: background-color 0.3s ease;
         }
         .form-actions button.save-button {
-            background-color: #28a745; /* Verde para salvar */
+            background-color: #28a745;
             color: white;
             border: none;
         }
@@ -140,7 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $id_usuario) {
             background-color: #218838;
         }
         .form-actions a.cancel-button {
-            background-color: #6c757d; /* Cinza para cancelar */
+            background-color: #6c757d;
             color: white;
             border: none;
         }

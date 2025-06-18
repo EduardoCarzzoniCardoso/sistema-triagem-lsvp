@@ -119,11 +119,6 @@ $ordem_etapas = [
     'Parecer Psicológico' => 'parecer_psicologico.php',
     'Finalização da Triagem' => 'finalizacao_triagem.php',
 ];
-$etapa_keys = array_keys($ordem_etapas);
-$indice_etapa_atual = array_search($etapa_atual_bd, $etapa_keys);
-if ($indice_etapa_atual === false) {
-    $indice_etapa_atual = 0;
-}
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -133,8 +128,52 @@ if ($indice_etapa_atual === false) {
     <title>Ficha de Triagem - Início</title>
     <link rel="stylesheet" href="paginainicial.css">
     <link rel="stylesheet" href="ficha_triagem_inicio.css">
+    <link rel="stylesheet" href="chatbot.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        .input-group label {
+            font-weight: 500;
+            margin-bottom: 5px;
+            display: block;
+            color: #333;
+        }
+        .form-grid fieldset {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 20px;
+        }
+        .form-grid fieldset legend {
+            grid-column: 1 / -1;
+            font-weight: bold;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            padding: 0;
+            border-bottom: none;
+        }
+        .form-grid fieldset .input-group > input[type="text"],
+        .form-grid fieldset .input-group > textarea,
+        .form-grid fieldset > input[type="text"] {
+            width: 100%;
+            padding: 0.6rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            background-color: white;
+        }
+        .input-group.full-width {
+            grid-column: 1 / -1;
+        }
+        textarea {
+            min-height: 60px;
+            resize: vertical;
+        }
         .sidebar-button:disabled { background-color: #e9ecef; color: #6c757d; cursor: not-allowed; opacity: 0.7; }
     </style>
 </head>
@@ -142,7 +181,7 @@ if ($indice_etapa_atual === false) {
     <div class="container">
         <header class="header-top">
             <div class="logo-area"><img src="images/logo_lvsp2.png" alt="Logo SVP Brasil"><span class="username-display"><?php echo htmlspecialchars($nome_usuario_logado); ?></span></div>
-            <div class="logout-area"><i class="fas fa-bell"></i><button class="logout-button" onclick="window.location.href='<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>?logout=true'">Logout</button></div>
+            <div class="logout-area"><button class="logout-button" onclick="window.location.href='<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>?logout=true'">Logout</button></div>
         </header>
         <nav class="main-nav">
             <ul><li><a href="paginainicial.php">Início</a></li><li><a href="triagens.php" class="active">Triagens</a></li><li><a href="idosos.php">Idosos</a></li><li><a href="usuarios.php">Usuário</a></li></ul>
@@ -151,20 +190,14 @@ if ($indice_etapa_atual === false) {
             <h1>Triagens</h1>
             <div class="triagem-layout">
                 <aside class="triagem-sidebar">
-                    <?php
-                    $indice_pagina_atual = 0;
-                    foreach ($ordem_etapas as $etapa_nome => $etapa_arquivo) {
-                        $etapa_indice_loop = array_search($etapa_nome, $etapa_keys);
-                        $link_url = ($id_idoso_sessao) ? "{$etapa_arquivo}?id_idoso={$id_idoso_sessao}&id_triagem={$id_triagem_sessao}" : "#";
-                        if ($etapa_indice_loop < $indice_etapa_atual) {
-                            echo "<a href='{$link_url}' class='sidebar-button'>{$etapa_nome}</a>";
-                        } elseif ($etapa_indice_loop == $indice_pagina_atual) {
-                            echo "<button class='sidebar-button active'>{$etapa_nome}</button>";
-                        } else {
-                            echo "<button class='sidebar-button' disabled>{$etapa_nome}</button>";
-                        }
-                    }
-                    ?>
+                    <a href="ficha_triagem_inicio.php<?php echo ($id_idoso_sessao && $id_triagem_sessao) ? "?id_idoso={$id_idoso_sessao}&id_triagem={$id_triagem_sessao}" : "?nova=true"; ?>" class="sidebar-button active">Ficha de Triagem - Início</a>
+                    <a href="ficha_triagem_continuacao.php<?php echo ($id_idoso_sessao && $id_triagem_sessao) ? "?id_idoso={$id_idoso_sessao}&id_triagem={$id_triagem_sessao}" : "#"; ?>" class="sidebar-button<?php echo (empty($id_idoso_sessao) ? ' disabled' : ''); ?>">Ficha de Triagem - Continuação</a>
+                    <a href="ficha_triagem_contrato.php<?php echo ($id_idoso_sessao && $id_triagem_sessao) ? "?id_idoso={$id_idoso_sessao}&id_triagem={$id_triagem_sessao}" : "#"; ?>" class="sidebar-button<?php echo (empty($id_idoso_sessao) ? ' disabled' : ''); ?>">Ficha de Triagem - Contrato</a>
+                    <a href="parecer_coordenador.php<?php echo ($id_idoso_sessao && $id_triagem_sessao) ? "?id_idoso={$id_idoso_sessao}&id_triagem={$id_triagem_sessao}" : "#"; ?>" class="sidebar-button<?php echo (empty($id_idoso_sessao) ? ' disabled' : ''); ?>">Parecer do(a) Coordenador(a)</a>
+                    <a href="parecer_diretoria.php<?php echo ($id_idoso_sessao && $id_triagem_sessao) ? "?id_idoso={$id_idoso_sessao}&id_triagem={$id_triagem_sessao}" : "#"; ?>" class="sidebar-button<?php echo (empty($id_idoso_sessao) ? ' disabled' : ''); ?>">Parecer da Diretoria</a>
+                    <a href="parecer_medico.php<?php echo ($id_idoso_sessao && $id_triagem_sessao) ? "?id_idoso={$id_idoso_sessao}&id_triagem={$id_triagem_sessao}" : "#"; ?>" class="sidebar-button<?php echo (empty($id_idoso_sessao) ? ' disabled' : ''); ?>">Parecer do Médico</a>
+                    <a href="parecer_psicologico.php<?php echo ($id_idoso_sessao && $id_triagem_sessao) ? "?id_idoso={$id_idoso_sessao}&id_triagem={$id_triagem_sessao}" : "#"; ?>" class="sidebar-button<?php echo (empty($id_idoso_sessao) ? ' disabled' : ''); ?>">Parecer Psicológico</a>
+                    <a href="finalizacao_triagem.php<?php echo ($id_idoso_sessao && $id_triagem_sessao) ? "?id_idoso={$id_idoso_sessao}&id_triagem={$id_triagem_sessao}" : "#"; ?>" class="sidebar-button<?php echo (empty($id_idoso_sessao) ? ' disabled' : ''); ?>">Finalização da Triagem</a>
                 </aside>
                 <section class="triagem-form-content">
                     <h2><?php echo $id_idoso_sessao ? 'Editando Ficha de Triagem' : 'Nova Ficha de Triagem'; ?></h2>
@@ -174,24 +207,69 @@ if ($indice_etapa_atual === false) {
                     <form class="form-grid" method="POST" action="ficha_triagem_inicio.php">
                         <fieldset>
                             <legend>Candidato - Idoso</legend>
-                            <input type="text" placeholder="Nome Completo..." name="nome" value="<?= htmlspecialchars($dados_idoso['nome_idoso'] ?? '') ?>" required />
-                            <input type="text" placeholder="Endereço..." name="endereco" value="<?= htmlspecialchars($dados_idoso['endereco_idoso'] ?? '') ?>" />
-                            <input type="text" placeholder="Nº" name="numero" value="<?= htmlspecialchars($dados_idoso['numero_idoso'] ?? '') ?>" />
-                            <input type="text" placeholder="Bairro" name="bairro" value="<?= htmlspecialchars($dados_idoso['bairro_idoso'] ?? '') ?>" />
-                            <input type="text" placeholder="Cidade" name="cidade" value="<?= htmlspecialchars($dados_idoso['cidade_idoso'] ?? '') ?>" />
-                            <input type="text" placeholder="CEP" name="cep" value="<?= htmlspecialchars($dados_idoso['cep_idoso'] ?? '') ?>" />
-                            <input type="text" placeholder="Estado" name="estado" value="<?= htmlspecialchars($dados_idoso['estado_idoso'] ?? '') ?>" />
+                            <div class="input-group">
+                                <label for="nome">Nome Completo</label>
+                                <input type="text" id="nome" name="nome" value="<?= htmlspecialchars($dados_idoso['nome_idoso'] ?? '') ?>" required />
+                            </div>
+                            <div class="input-group">
+                                <label for="endereco">Endereço</label>
+                                <input type="text" id="endereco" name="endereco" value="<?= htmlspecialchars($dados_idoso['endereco_idoso'] ?? '') ?>" />
+                            </div>
+                            <div class="input-group">
+                                <label for="numero">Número</label>
+                                <input type="text" id="numero" name="numero" value="<?= htmlspecialchars($dados_idoso['numero_idoso'] ?? '') ?>" />
+                            </div>
+                            <div class="input-group">
+                                <label for="bairro">Bairro</label>
+                                <input type="text" id="bairro" name="bairro" value="<?= htmlspecialchars($dados_idoso['bairro_idoso'] ?? '') ?>" />
+                            </div>
+                            <div class="input-group">
+                                <label for="cidade">Cidade</label>
+                                <input type="text" id="cidade" name="cidade" value="<?= htmlspecialchars($dados_idoso['cidade_idoso'] ?? '') ?>" />
+                            </div>
+                            <div class="input-group">
+                                <label for="cep">CEP</label>
+                                <input type="text" id="cep" name="cep" value="<?= htmlspecialchars($dados_idoso['cep_idoso'] ?? '') ?>" />
+                            </div>
+                            <div class="input-group">
+                                <label for="estado">Estado</label>
+                                <input type="text" id="estado" name="estado" value="<?= htmlspecialchars($dados_idoso['estado_idoso'] ?? '') ?>" />
+                            </div>
                         </fieldset>
                         <fieldset>
                             <legend>Documentação</legend>
-                            <input type="text" placeholder="RG" name="rg" value="<?= htmlspecialchars($dados_idoso['rg_idoso'] ?? '') ?>" />
-                            <input type="text" placeholder="CPF" name="cpf" value="<?= htmlspecialchars($dados_idoso['cpf_idoso'] ?? '') ?>" required />
-                            <input type="text" placeholder="Título de Eleitor" name="titulo_eleitor" value="<?= htmlspecialchars($dados_idoso['titulo_eleitor'] ?? '') ?>" />
-                            <input type="text" placeholder="Cart. Profissional" name="cart_prof" value="<?= htmlspecialchars($dados_idoso['carteira_profissional'] ?? '') ?>" />
-                            <input type="text" placeholder="Reservista" name="reservista" value="<?= htmlspecialchars($dados_idoso['reservista'] ?? '') ?>" />
-                            <input type="text" placeholder="Certidão de Nascimento" name="cert_nasc" value="<?= htmlspecialchars($dados_idoso['certidao_nascimento'] ?? '') ?>" />
-                            <input type="text" placeholder="Certidão de Casamento" name="cert_casamento" value="<?= htmlspecialchars($dados_idoso['certidao_casamento'] ?? '') ?>" />
-                            <textarea placeholder="Outros documentos" name="outros"><?= htmlspecialchars($dados_idoso['outros_documentos_idoso'] ?? '') ?></textarea>
+                            <div class="input-group">
+                                <label for="rg">RG</label>
+                                <input type="text" id="rg" name="rg" value="<?= htmlspecialchars($dados_idoso['rg_idoso'] ?? '') ?>" />
+                            </div>
+                            <div class="input-group">
+                                <label for="cpf">CPF</label>
+                                <input type="text" id="cpf" name="cpf" value="<?= htmlspecialchars($dados_idoso['cpf_idoso'] ?? '') ?>" required />
+                            </div>
+                            <div class="input-group">
+                                <label for="titulo_eleitor">Título de Eleitor</label>
+                                <input type="text" id="titulo_eleitor" name="titulo_eleitor" value="<?= htmlspecialchars($dados_idoso['titulo_eleitor'] ?? '') ?>" />
+                            </div>
+                            <div class="input-group">
+                                <label for="cart_prof">Carteira Profissional</label>
+                                <input type="text" id="cart_prof" name="cart_prof" value="<?= htmlspecialchars($dados_idoso['carteira_profissional'] ?? '') ?>" />
+                            </div>
+                            <div class="input-group">
+                                <label for="reservista">Reservista</label>
+                                <input type="text" id="reservista" name="reservista" value="<?= htmlspecialchars($dados_idoso['reservista'] ?? '') ?>" />
+                            </div>
+                            <div class="input-group">
+                                <label for="cert_nasc">Certidão de Nascimento</label>
+                                <input type="text" id="cert_nasc" name="cert_nasc" value="<?= htmlspecialchars($dados_idoso['certidao_nascimento'] ?? '') ?>" />
+                            </div>
+                            <div class="input-group">
+                                <label for="cert_casamento">Certidão de Casamento</label>
+                                <input type="text" id="cert_casamento" name="cert_casamento" value="<?= htmlspecialchars($dados_idoso['certidao_casamento'] ?? '') ?>" />
+                            </div>
+                            <div class="input-group full-width">
+                                <label for="outros">Outros documentos</label>
+                                <textarea id="outros" name="outros"><?= htmlspecialchars($dados_idoso['outros_documentos_idoso'] ?? '') ?></textarea>
+                            </div>
                         </fieldset>
                         <div class="form-buttons">
                             <button type="submit" name="salvar_rascunho" class="btn-secondary"><?php echo $id_idoso_sessao ? 'Atualizar Rascunho' : 'Salvar Rascunho'; ?></button>
@@ -206,4 +284,8 @@ if ($indice_etapa_atual === false) {
         </footer>
     </div>
 </body>
+<script>
+    const userNameLoggedIn = "<?php echo htmlspecialchars($nome_usuario_logado); ?>";
+</script>
+<script src="chatbot.js"></script>
 </html>

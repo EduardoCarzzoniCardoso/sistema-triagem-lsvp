@@ -18,7 +18,7 @@ if (isset($_GET['id_idoso']) && isset($_GET['id_triagem'])) {
     exit();
 }
 
-if (!isset($_SESSION['current_idoso_id'])) {
+if (!isset($_SESSION['current_idoso_id']) || !isset($_SESSION['current_triagem_id'])) {
     header("Location: ficha_triagem_inicio.php");
     exit();
 }
@@ -58,12 +58,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $existing_record = $check_stmt->fetch(PDO::FETCH_ASSOC);
 
         $anexos = [
-            'anexo_certidao' => handle_file_upload('anexo_certidao', $id_triagem_sessao, 'certidao') ?? $existing_record['anexo_certidao_nasc_ou_casamento'] ?? null,
-            'anexo_rg' => handle_file_upload('anexo_rg', $id_triagem_sessao, 'rg') ?? $existing_record['anexo_rg'] ?? null,
-            'anexo_cpf' => handle_file_upload('anexo_cpf', $id_triagem_sessao, 'cpf') ?? $existing_record['anexo_cpf'] ?? null,
-            'anexo_receituarios' => handle_file_upload('anexo_receituarios', $id_triagem_sessao, 'receituarios') ?? $existing_record['anexo_receituarios'] ?? null,
-            'anexo_medicamentos' => handle_file_upload('anexo_medicamentos', $id_triagem_sessao, 'medicamentos') ?? $existing_record['anexo_medicamentos'] ?? null,
-            'anexo_fotos' => handle_file_upload('anexo_fotos', $id_triagem_sessao, 'fotos3x4') ?? $existing_record['anexo_duas_fotos_3x4'] ?? null,
+            'anexo_certidao' => handle_file_upload('anexo_certidao', $id_triagem_sessao, 'certidao') ?? ($existing_record['anexo_certidao_nasc_ou_casamento'] ?? null),
+            'anexo_rg' => handle_file_upload('anexo_rg', $id_triagem_sessao, 'rg') ?? ($existing_record['anexo_rg'] ?? null),
+            'anexo_cpf' => handle_file_upload('anexo_cpf', $id_triagem_sessao, 'cpf') ?? ($existing_record['anexo_cpf'] ?? null),
+            'anexo_receituarios' => handle_file_upload('anexo_receituarios', $id_triagem_sessao, 'receituarios') ?? ($existing_record['anexo_receituarios'] ?? null),
+            'anexo_medicamentos' => handle_file_upload('anexo_medicamentos', $id_triagem_sessao, 'medicamentos') ?? ($existing_record['anexo_medicamentos'] ?? null),
+            'anexo_fotos' => handle_file_upload('anexo_fotos', $id_triagem_sessao, 'fotos3x4') ?? ($existing_record['anexo_duas_fotos_3x4'] ?? null),
+            'caminho_relatorio_gerado' => handle_file_upload('anexo_relatorio', $id_triagem_sessao, 'relatorio') ?? ($existing_record['caminho_relatorio_gerado'] ?? null),
+            'caminho_contrato_gerado' => handle_file_upload('anexo_contrato', $id_triagem_sessao, 'contrato') ?? ($existing_record['caminho_contrato_gerado'] ?? null),
         ];
 
         $params = [
@@ -75,12 +77,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ':medicamentos' => isset($_POST['medicamentos']) ? 1 : 0, ':anexo_medicamentos' => $anexos['anexo_medicamentos'],
             ':roupas' => isset($_POST['roupas']) ? 1 : 0,
             ':fotos' => isset($_POST['fotos']) ? 1 : 0, ':anexo_fotos' => $anexos['anexo_fotos'],
+            ':caminho_relatorio_gerado' => $anexos['caminho_relatorio_gerado'],
+            ':caminho_contrato_gerado' => $anexos['caminho_contrato_gerado'],
         ];
 
         if ($existing_record) {
-            $sql = "UPDATE finalizacao_triagem SET id_usuario = :id_usuario, certidao_nasc_ou_casamento = :certidao, anexo_certidao_nasc_ou_casamento = :anexo_certidao, rg = :rg, anexo_rg = :anexo_rg, cpf = :cpf, anexo_cpf = :anexo_cpf, receituarios = :receituarios, anexo_receituarios = :anexo_receituarios, medicamentos = :medicamentos, anexo_medicamentos = :anexo_medicamentos, roupas_uso_pessoal = :roupas, duas_fotos_3x4 = :fotos, anexo_duas_fotos_3x4 = :anexo_fotos WHERE id_triagem = :id_triagem";
+            $sql = "UPDATE finalizacao_triagem SET id_usuario = :id_usuario, certidao_nasc_ou_casamento = :certidao, anexo_certidao_nasc_ou_casamento = :anexo_certidao, rg = :rg, anexo_rg = :anexo_rg, cpf = :cpf, anexo_cpf = :anexo_cpf, receituarios = :receituarios, anexo_receituarios = :anexo_receituarios, medicamentos = :medicamentos, anexo_medicamentos = :anexo_medicamentos, roupas_uso_pessoal = :roupas, duas_fotos_3x4 = :fotos, anexo_duas_fotos_3x4 = :anexo_fotos, caminho_relatorio_gerado = :caminho_relatorio_gerado, caminho_contrato_gerado = :caminho_contrato_gerado WHERE id_triagem = :id_triagem";
         } else {
-            $sql = "INSERT INTO finalizacao_triagem (id_triagem, id_usuario, certidao_nasc_ou_casamento, anexo_certidao_nasc_ou_casamento, rg, anexo_rg, cpf, anexo_cpf, receituarios, anexo_receituarios, medicamentos, anexo_medicamentos, roupas_uso_pessoal, duas_fotos_3x4, anexo_duas_fotos_3x4) VALUES (:id_triagem, :id_usuario, :certidao, :anexo_certidao, :rg, :anexo_rg, :cpf, :anexo_cpf, :receituarios, :anexo_receituarios, :medicamentos, :anexo_medicamentos, :roupas, :fotos, :anexo_fotos)";
+            $sql = "INSERT INTO finalizacao_triagem (id_triagem, id_usuario, certidao_nasc_ou_casamento, anexo_certidao_nasc_ou_casamento, rg, anexo_rg, cpf, anexo_cpf, receituarios, anexo_receituarios, medicamentos, anexo_medicamentos, roupas_uso_pessoal, duas_fotos_3x4, anexo_duas_fotos_3x4, caminho_relatorio_gerado, caminho_contrato_gerado) VALUES (:id_triagem, :id_usuario, :certidao, :anexo_certidao, :rg, :anexo_rg, :cpf, :anexo_cpf, :receituarios, :anexo_receituarios, :medicamentos, :anexo_medicamentos, :roupas, :fotos, :anexo_fotos, :caminho_relatorio_gerado, :caminho_contrato_gerado)";
         }
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
@@ -135,9 +139,6 @@ $ordem_etapas = [
     'Parecer Psicológico' => 'parecer_psicologico.php',
     'Finalização da Triagem' => 'finalizacao_triagem.php',
 ];
-$etapa_keys = array_keys($ordem_etapas);
-$indice_etapa_atual = array_search($etapa_atual_bd, $etapa_keys);
-if ($indice_etapa_atual === false) $indice_etapa_atual = 0;
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -147,6 +148,7 @@ if ($indice_etapa_atual === false) $indice_etapa_atual = 0;
     <title>Finalização da Triagem</title>
     <link rel="stylesheet" href="paginainicial.css">
     <link rel="stylesheet" href="ficha_triagem_inicio.css">
+    <link rel="stylesheet" href="chatbot.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         .sidebar-button:disabled { background-color: #e9ecef; color: #6c757d; cursor: not-allowed; opacity: 0.7; }
@@ -176,7 +178,7 @@ if ($indice_etapa_atual === false) $indice_etapa_atual = 0;
     <div class="container">
         <header class="header-top">
             <div class="logo-area"><img src="images/logo_lvsp2.png" alt="Logo SVP Brasil"><span class="username-display"><?php echo htmlspecialchars($nome_usuario_logado); ?></span></div>
-            <div class="logout-area"><i class="fas fa-bell"></i><button class="logout-button" onclick="window.location.href='<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>?logout=true'">Logout</button></div>
+            <div class="logout-area"><button class="logout-button" onclick="window.location.href='<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>?logout=true'">Logout</button></div>
         </header>
         <nav class="main-nav">
             <ul><li><a href="paginainicial.php">Início</a></li><li><a href="triagens.php" class="active">Triagens</a></li><li><a href="idosos.php">Idosos</a></li><li><a href="usuarios.php">Usuário</a></li></ul>
@@ -185,20 +187,14 @@ if ($indice_etapa_atual === false) $indice_etapa_atual = 0;
             <h1>Triagens</h1>
             <div class="triagem-layout">
                 <aside class="triagem-sidebar">
-                    <?php
-                    $indice_pagina_atual = 7;
-                    foreach ($ordem_etapas as $etapa_nome => $etapa_arquivo) {
-                        $etapa_indice_loop = array_search($etapa_nome, $etapa_keys);
-                        $link_url = "{$etapa_arquivo}?id_idoso={$id_idoso_sessao}&id_triagem={$id_triagem_sessao}";
-                        if ($etapa_indice_loop < $indice_pagina_atual) {
-                            echo "<a href='{$link_url}' class='sidebar-button'>{$etapa_nome}</a>";
-                        } elseif ($etapa_indice_loop == $indice_pagina_atual) {
-                            echo "<button class='sidebar-button active'>{$etapa_nome}</button>";
-                        } else {
-                            echo "<button class='sidebar-button' disabled>{$etapa_nome}</button>";
-                        }
-                    }
-                    ?>
+                    <a href="ficha_triagem_inicio.php<?php echo ($id_idoso_sessao && $id_triagem_sessao) ? "?id_idoso={$id_idoso_sessao}&id_triagem={$id_triagem_sessao}" : "?nova=true"; ?>" class="sidebar-button">Ficha de Triagem - Início</a>
+                    <a href="ficha_triagem_continuacao.php<?php echo ($id_idoso_sessao && $id_triagem_sessao) ? "?id_idoso={$id_idoso_sessao}&id_triagem={$id_triagem_sessao}" : "#"; ?>" class="sidebar-button<?php echo (empty($id_idoso_sessao) ? ' disabled' : ''); ?>">Ficha de Triagem - Continuação</a>
+                    <a href="ficha_triagem_contrato.php<?php echo ($id_idoso_sessao && $id_triagem_sessao) ? "?id_idoso={$id_idoso_sessao}&id_triagem={$id_triagem_sessao}" : "#"; ?>" class="sidebar-button<?php echo (empty($id_idoso_sessao) ? ' disabled' : ''); ?>">Ficha de Triagem - Contrato</a>
+                    <a href="parecer_coordenador.php<?php echo ($id_idoso_sessao && $id_triagem_sessao) ? "?id_idoso={$id_idoso_sessao}&id_triagem={$id_triagem_sessao}" : "#"; ?>" class="sidebar-button<?php echo (empty($id_idoso_sessao) ? ' disabled' : ''); ?>">Parecer do(a) Coordenador(a)</a>
+                    <a href="parecer_diretoria.php<?php echo ($id_idoso_sessao && $id_triagem_sessao) ? "?id_idoso={$id_idoso_sessao}&id_triagem={$id_triagem_sessao}" : "#"; ?>" class="sidebar-button<?php echo (empty($id_idoso_sessao) ? ' disabled' : ''); ?>">Parecer da Diretoria</a>
+                    <a href="parecer_medico.php<?php echo ($id_idoso_sessao && $id_triagem_sessao) ? "?id_idoso={$id_idoso_sessao}&id_triagem={$id_triagem_sessao}" : "#"; ?>" class="sidebar-button<?php echo (empty($id_idoso_sessao) ? ' disabled' : ''); ?>">Parecer do Médico</a>
+                    <a href="parecer_psicologico.php<?php echo ($id_idoso_sessao && $id_triagem_sessao) ? "?id_idoso={$id_idoso_sessao}&id_triagem={$id_triagem_sessao}" : "#"; ?>" class="sidebar-button<?php echo (empty($id_idoso_sessao) ? ' disabled' : ''); ?>">Parecer Psicológico</a>
+                    <a href="finalizacao_triagem.php<?php echo ($id_idoso_sessao && $id_triagem_sessao) ? "?id_idoso={$id_idoso_sessao}&id_triagem={$id_triagem_sessao}" : "#"; ?>" class="sidebar-button active<?php echo (empty($id_idoso_sessao) ? ' disabled' : ''); ?>">Finalização da Triagem</a>
                 </aside>
                 <section class="triagem-form-content">
                     <h2>Finalização da Triagem</h2>
@@ -218,13 +214,27 @@ if ($indice_etapa_atual === false) $indice_etapa_atual = 0;
                         </fieldset>
                         <fieldset class="checklist-fieldset">
                             <legend>Relatórios e contrato</legend>
-                            <div class="checklist-item"><label class="item-label"><label class="custom-checkbox"><input type="checkbox" name="gerar_relatorio" value="1" disabled><span class="checkmark"></span></label> Gerar relatório de triagem completa</label><button type="button" class="btn-action" disabled>Gerar</button></div>
-                            <div class="checklist-item"><label class="item-label"><label class="custom-checkbox"><input type="checkbox" name="gerar_contrato" value="1" disabled><span class="checkmark"></span></label> Gerar contrato</label><button type="button" class="btn-action" disabled>Gerar</button></div>
+                            <div class="checklist-item">
+                                <label class="item-label">
+                                    <label class="custom-checkbox"><input type="checkbox" name="gerar_relatorio" value="1" disabled><span class="checkmark"></span></label> Relatório de triagem completa
+                                </label>
+                                <?php if(!empty($dados_finalizacao['caminho_relatorio_gerado'])) echo "<a href='{$dados_finalizacao['caminho_relatorio_gerado']}' class='view-anexo-btn' target='_blank'>Ver Anexo</a>"; ?>
+                                <label for="anexo_relatorio" class="file-upload-label">Anexar Relatório</label>
+                                <input type="file" id="anexo_relatorio" name="anexo_relatorio">
+                            </div>
+                            <div class="checklist-item">
+                                <label class="item-label">
+                                    <label class="custom-checkbox"><input type="checkbox" name="gerar_contrato" value="1" disabled><span class="checkmark"></span></label> Contrato
+                                </label>
+                                <?php if(!empty($dados_finalizacao['caminho_contrato_gerado'])) echo "<a href='{$dados_finalizacao['caminho_contrato_gerado']}' class='view-anexo-btn' target='_blank'>Ver Anexo</a>"; ?>
+                                <label for="anexo_contrato" class="file-upload-label">Anexar Contrato</label>
+                                <input type="file" id="anexo_contrato" name="anexo_contrato">
+                            </div>
                         </fieldset>
                         <div class="form-buttons">
-                             <a href="parecer_psicologico.php?id_idoso=<?= $id_idoso_sessao ?>&id_triagem=<?= $id_triagem_sessao ?>" class="btn-secondary">Voltar</a>
-                             <button type="submit" name="salvar_rascunho" class="btn-secondary">Salvar</button>
-                             <button type="submit" name="finalizar_triagem" class="btn-primary final-action-button">Finalizar Triagem</button>
+                            <a href="parecer_psicologico.php?id_idoso=<?= $id_idoso_sessao ?>&id_triagem=<?= $id_triagem_sessao ?>" class="btn-secondary">Voltar</a>
+                            <button type="submit" name="salvar_rascunho" class="btn-secondary">Salvar</button>
+                            <button type="submit" name="finalizar_triagem" class="btn-primary final-action-button">Finalizar Triagem</button>
                         </div>
                     </form>
                 </section>
@@ -234,5 +244,9 @@ if ($indice_etapa_atual === false) $indice_etapa_atual = 0;
             Sistema de Triagem LSVP - Lar São Vicente de Paulo | © 2025 - Versão 1.0
         </footer>
     </div>
+    <script>
+        const userNameLoggedIn = "<?php echo htmlspecialchars($nome_usuario_logado); ?>";
+    </script>
+    <script src="chatbot.js"></script>
 </body>
 </html>
